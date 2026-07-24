@@ -1,8 +1,12 @@
 wreck-ship
 An open-source historical database, geospatial tracker, and mapping toolkit for documented modern maritime disasters (civilian, military, and cargo wrecks) spanning from 1901 to 2026.
-About The Project
+
+About The Project :
 wreck-ship provides structured, verified, and geospatial data on major shipwrecks across the globe. Designed for maritime historians, developers, researchers, and data visualizers, this project aggregates exact dates, times, geographic coordinates, vessel types, and casualty figures into a clean, queryable format.
 Whether you are building an interactive 3D globe, running temporal spatial queries, or analyzing maritime safety metrics across different historical eras, wreck-ship serves as a unified data source.
+
+
+
 Key Features
 •	Comprehensive Dataset (1901–2026)
 Covers over a century of maritime history, including naval warfare losses, passenger liner tragedies, industrial cargo sinkings, and submarine incidents.
