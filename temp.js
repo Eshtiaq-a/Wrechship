@@ -1,0 +1,894 @@
+(function(){
+"use strict";
+
+const INCIDENTS = [
+{name:"RMS Titanic",date:"1912-04-15",lat:41.7255,lon:-49.9469,cls:"ferry",deaths:1500,sea:"North Atlantic, off Newfoundland",precision:"exact",desc:"The famous 'unsinkable' luxury liner struck an iceberg on her maiden voyage and sank in the early hours. With inadequate lifeboats, over 1,500 people perished in the freezing waters.",src:["https://en.wikipedia.org/wiki/Titanic"]},
+{name:"RMS Empress of Ireland",date:"1914-05-29",lat:48.6250,lon:-68.4083,cls:"ferry",deaths:1012,sea:"St. Lawrence River, Canada",precision:"exact",desc:"Rammed by a Norwegian collier in thick fog, the Canadian passenger liner sank in just 14 minutes, taking 1,012 lives in Canada's worst peacetime maritime disaster.",src:["https://en.wikipedia.org/wiki/RMS_Empress_of_Ireland"]},
+{name:"MV Wilhelm Gustloff",date:"1945-01-30",lat:55.1247,lon:17.4166,cls:"military",deaths:9343,sea:"Baltic Sea, off Pomerania",precision:"exact",desc:"Packed with thousands of German civilian refugees and military personnel fleeing the Red Army, she was torpedoed by a Soviet submarine. It is the deadliest single-ship sinking in history.",src:["https://en.wikipedia.org/wiki/MV_Wilhelm_Gustloff"]},
+{name:"SS General von Steuben",date:"1945-02-10",lat:54.6833,lon:16.8500,cls:"military",deaths:4500,sea:"Baltic Sea, off Pomerania",precision:"exact",desc:"A German armed transport carrying refugees and wounded soldiers from East Prussia was torpedoed by Soviet submarine S-13 (the same sub that sank the Wilhelm Gustloff 11 days prior).",src:["https://en.wikipedia.org/wiki/SS_General_von_Steuben"]},
+{name:"INS Khukri",date:"1971-12-09",lat:20.8000,lon:70.9666,cls:"military",deaths:194,sea:"Arabian Sea, off Diu, India",precision:"exact",desc:"The Indian Navy frigate was torpedoed by the Pakistani submarine PNS Hangor during the Indo-Pakistani War. Captain Mulla chose to go down with his ship.",src:["https://en.wikipedia.org/wiki/INS_Khukri_(F149)"]},
+{name:"SS Edmund Fitzgerald",date:"1975-11-10",lat:46.9983,lon:-85.1100,cls:"cargo",deaths:29,sea:"Lake Superior, off Michigan, USA",precision:"exact",desc:"The largest ship on North America's Great Lakes was lost with all hands during a severe winter storm, famously memorialized in a song by Gordon Lightfoot.",src:["https://en.wikipedia.org/wiki/SS_Edmund_Fitzgerald"]},
+{name:"SS Cyclops",date:"1942-01-12",lat:40.33,lon:-69.00,cls:"cargo",deaths:"Unknown",sea:"Torpedoed, off Cape Cod, USA",precision:"approx",desc:"SS Cyclops was a cargo ship. Incident: Torpedoed, off Cape Cod, USA.",src:[]},
+{name:"HMS Dorsetshire",date:"1942-04-05",lat:7.75,lon:82.25,cls:"military",deaths:"Unknown",sea:"Air attack, Indian Ocean",precision:"approx",desc:"HMS Dorsetshire was a heavy cruiser. Incident: Air attack, Indian Ocean.",src:[]},
+{name:"USS Lexington",date:"1942-05-08",lat:-15.20,lon:155.50,cls:"military",deaths:"Unknown",sea:"Scuttled after Battle of Coral Sea",precision:"approx",desc:"USS Lexington was a aircraft carrier. Incident: Scuttled after Battle of Coral Sea.",src:[]},
+{name:"Akagi",date:"1942-06-05",lat:30.50,lon:-178.67,cls:"military",deaths:"Unknown",sea:"Scuttled after Battle of Midway",precision:"approx",desc:"Akagi was a aircraft carrier. Incident: Scuttled after Battle of Midway.",src:[]},
+{name:"USS Yorktown",date:"1942-06-07",lat:30.58,lon:-176.57,cls:"military",deaths:"Unknown",sea:"Sank after Battle of Midway",precision:"approx",desc:"USS Yorktown was a aircraft carrier. Incident: Sank after Battle of Midway.",src:[]},
+{name:"HMS Eagle",date:"1942-08-11",lat:38.05,lon:14.67,cls:"military",deaths:"Unknown",sea:"Torpedoed, Mediterranean",precision:"approx",desc:"HMS Eagle was a aircraft carrier. Incident: Torpedoed, Mediterranean.",src:[]},
+{name:"RMS Laconia",date:"1942-09-12",lat:-5.08,lon:-11.63,cls:"ferry",deaths:"Unknown",sea:"Torpedoed, off West Africa",precision:"approx",desc:"RMS Laconia was a armed passenger liner. Incident: Torpedoed, off West Africa.",src:[]},
+{name:"USS Wasp",date:"1942-09-15",lat:12.40,lon:164.17,cls:"military",deaths:"Unknown",sea:"Torpedoed, South Pacific",precision:"approx",desc:"USS Wasp was a aircraft carrier. Incident: Torpedoed, South Pacific.",src:[]},
+{name:"SS Caribou",date:"1942-10-14",lat:47.58,lon:-59.25,cls:"ferry",deaths:"Unknown",sea:"Torpedoed, Cabot Strait, Canada",precision:"approx",desc:"SS Caribou was a passenger ferry. Incident: Torpedoed, Cabot Strait, Canada.",src:[]},
+{name:"USS Juneau",date:"1942-11-13",lat:-9.18,lon:159.85,cls:"military",deaths:"Unknown",sea:"Torpedoed, near Guadalcanal",precision:"approx",desc:"USS Juneau was a light cruiser. Incident: Torpedoed, near Guadalcanal.",src:[]},
+{name:"SS Dorchester",date:"1943-02-03",lat:59.00,lon:-41.00,cls:"military",deaths:"Unknown",sea:"Torpedoed, North Atlantic",precision:"approx",desc:"SS Dorchester was a troopship. Incident: Torpedoed, North Atlantic.",src:[]},
+{name:"Italian battleship Roma",date:"1943-09-09",lat:42.60,lon:8.60,cls:"military",deaths:"Unknown",sea:"Guided-bomb attack, Tyrrhenian Sea",precision:"approx",desc:"Italian battleship Roma was a battleship. Incident: Guided-bomb attack, Tyrrhenian Sea.",src:[]},
+{name:"Toyama Maru",date:"1944-06-29",lat:29.75,lon:128.25,cls:"military",deaths:"Unknown",sea:"Torpedoed, south-west of Japan",precision:"approx",desc:"Toyama Maru was a troopship. Incident: Torpedoed, south-west of Japan.",src:[]},
+{name:"Shinano",date:"1944-11-29",lat:32.00,lon:137.00,cls:"military",deaths:"Unknown",sea:"Torpedoed, Pacific Ocean",precision:"approx",desc:"Shinano was a aircraft carrier. Incident: Torpedoed, Pacific Ocean.",src:[]},
+{name:"SS Léopoldville",date:"1944-12-24",lat:50.42,lon:-0.95,cls:"military",deaths:"Unknown",sea:"Torpedoed, English Channel",precision:"approx",desc:"SS Léopoldville was a troopship. Incident: Torpedoed, English Channel.",src:[]},
+{name:"TSMS Lakonia",date:"1963-12-29",lat:35.60,lon:-7.20,cls:"cargo",deaths:"Unknown",sea:"Fire and sinking, Atlantic near Madeira",precision:"approx",desc:"TSMS Lakonia was a cruise ship. Incident: Fire and sinking, Atlantic near Madeira.",src:[]},
+{name:"SS Yarmouth Castle",date:"1965-11-13",lat:26.17,lon:-79.42,cls:"ferry",deaths:"Unknown",sea:"Fire and sinking, off Florida",precision:"approx",desc:"SS Yarmouth Castle was a passenger ship. Incident: Fire and sinking, off Florida.",src:[]},
+{name:"SS Heraklion",date:"1966-12-08",lat:35.50,lon:25.00,cls:"ferry",deaths:"Unknown",sea:"Foundered, Aegean Sea",precision:"approx",desc:"SS Heraklion was a car/passenger ferry. Incident: Foundered, Aegean Sea.",src:[]},
+{name:"Marchioness",date:"1989-08-20",lat:51.50,lon:-0.18,cls:"ferry",deaths:"Unknown",sea:"Collision/sinking, River Thames, UK",precision:"approx",desc:"Marchioness was a pleasure boat. Incident: Collision/sinking, River Thames, UK.",src:[]},
+{name:"MV Princess of the Orient",date:"1998-09-18",lat:13.00,lon:123.60,cls:"ferry",deaths:"Unknown",sea:"Sank during Typhoon Vicki, Philippines",precision:"approx",desc:"MV Princess of the Orient was a passenger ferry. Incident: Sank during Typhoon Vicki, Philippines.",src:[]},
+{name:"MS Express Samina",date:"2000-09-26",lat:37.35,lon:25.20,cls:"ferry",deaths:"Unknown",sea:"Struck rocks and sank, Greece",precision:"approx",desc:"MS Express Samina was a passenger ferry. Incident: Struck rocks and sank, Greece.",src:[]},
+{name:"Al Salam Boccaccio 98",date:"2006-02-02",lat:27.00,lon:34.20,cls:"ferry",deaths:"Unknown",sea:"Fire/sinking, Red Sea",precision:"approx",desc:"Al Salam Boccaccio 98 was a passenger ferry. Incident: Fire/sinking, Red Sea.",src:[]},
+{name:"MS Sea Diamond",date:"2007-04-06",lat:36.39,lon:25.48,cls:"cargo",deaths:"Unknown",sea:"Struck reef and sank, Santorini, Greece",precision:"approx",desc:"MS Sea Diamond was a cruise ship. Incident: Struck reef and sank, Santorini, Greece.",src:[]},
+{name:"MV Explorer",date:"2007-11-23",lat:-62.40,lon:-57.19,cls:"cargo",deaths:"Unknown",sea:"Sank after iceberg collision, Antarctic waters",precision:"approx",desc:"MV Explorer was a expedition cruise ship. Incident: Sank after iceberg collision, Antarctic waters.",src:[]},
+{name:"MV Princess Ashika",date:"2009-08-05",lat:-21.20,lon:-175.10,cls:"ferry",deaths:"Unknown",sea:"Sank near Tonga",precision:"approx",desc:"MV Princess Ashika was a passenger ferry. Incident: Sank near Tonga.",src:[]},
+{name:"Rena",date:"2011-10-11",lat:-37.53,lon:176.42,cls:"cargo",deaths:"Unknown",sea:"Grounded/broke up, Bay of Plenty, New Zealand",precision:"approx",desc:"Rena was a container ship. Incident: Grounded/broke up, Bay of Plenty, New Zealand.",src:[]},
+{name:"Dongfang zhi xing",date:"2015-06-01",lat:30.20,lon:112.90,cls:"cargo",deaths:"Unknown",sea:"Capsized, Yangtze River, China",precision:"approx",desc:"Dongfang zhi xing was a river cruise ship. Incident: Capsized, Yangtze River, China.",src:[]},
+{name:"MV Sinar Bangun",date:"2016-06-18",lat:2.62,lon:98.85,cls:"ferry",deaths:"Unknown",sea:"Capsized, Lake Toba, Indonesia",precision:"approx",desc:"MV Sinar Bangun was a passenger ferry. Incident: Capsized, Lake Toba, Indonesia.",src:[]},
+{name:"KM Zahro Express",date:"2017-01-01",lat:-6.00,lon:106.73,cls:"ferry",deaths:"Unknown",sea:"Fire/sinking, Jakarta Bay, Indonesia",precision:"approx",desc:"KM Zahro Express was a passenger ferry. Incident: Fire/sinking, Jakarta Bay, Indonesia.",src:[]},
+{name:"MV Stellar Daisy",date:"2017-03-31",lat:-34.70,lon:-39.50,cls:"military",deaths:"Unknown",sea:"Foundered, South Atlantic",precision:"approx",desc:"MV Stellar Daisy was a ore carrier. Incident: Foundered, South Atlantic.",src:[]},
+{name:"Gulf Livestock 1",date:"2020-09-02",lat:29.90,lon:128.50,cls:"military",deaths:"Unknown",sea:"Lost during Typhoon Maysak, East China Sea",precision:"approx",desc:"Gulf Livestock 1 was a livestock carrier. Incident: Lost during Typhoon Maysak, East China Sea.",src:[]},
+{name:"HTMS Sukhothai",date:"2022-12-18",lat:10.97,lon:99.25,cls:"military",deaths:"Unknown",sea:"Capsized/sank, Gulf of Thailand",precision:"approx",desc:"HTMS Sukhothai was a corvette. Incident: Capsized/sank, Gulf of Thailand.",src:[]},
+{name:"Lu Peng Yuan Yu 028",date:"2023-05-16",lat:-5.20,lon:52.20,cls:"cargo",deaths:"Unknown",sea:"Capsized, central Indian Ocean",precision:"approx",desc:"Lu Peng Yuan Yu 028 was a fishing vessel. Incident: Capsized, central Indian Ocean.",src:[]},
+{name:"MT Terra Nova",date:"2024-07-25",lat:14.53,lon:120.60,cls:"cargo",deaths:"Unknown",sea:"Sank off Limay, Philippines",precision:"approx",desc:"MT Terra Nova was a oil tanker. Incident: Sank off Limay, Philippines.",src:[]},
+{name:"K-141 Kursk",date:"2000-08-12",lat:69.6666,lon:37.5833,cls:"submarine",deaths:118,sea:"Barents Sea",precision:"exact",desc:"The Russian nuclear-powered cruise missile submarine sank following an internal torpedo explosion during a naval exercise. All 118 personnel aboard perished after international rescue efforts were delayed.",src:["https://en.wikipedia.org/wiki/Kursk_submarine_disaster"]},
+{name:"SS Vestris",date:"1928-11-12",lat:37.25,lon:-70.75,cls:"ferry",deaths:110,sea:"Atlantic Ocean, off Virginia, USA",precision:"approx",desc:"The British passenger liner listed heavily in a storm and capsized. Of the 325 aboard, 110 died, many because lifeboats could not be launched from the elevated side. The disaster led to major reforms in ship stability requirements.",src:["https://en.wikipedia.org/wiki/SS_Vestris"]},
+{name:"USS S-4",date:"1927-12-17",lat:42.05,lon:-70.18,cls:"submarine",deaths:40,sea:"Atlantic Ocean, off Provincetown, Massachusetts, USA",precision:"approx",desc:"US Navy submarine S-4 sank after colliding with the Coast Guard destroyer Paulding during a surfacing drill off Cape Cod. All 40 crew were lost; the disaster spurred major advances in submarine rescue equipment.",src:["https://en.wikipedia.org/wiki/USS_S-4_(SS-109)"]},
+{name:"SS Morro Castle",date:"1934-09-08",lat:40.22,lon:-73.97,cls:"ferry",deaths:137,sea:"Atlantic Ocean, off Asbury Park, New Jersey, USA",precision:"approx",desc:"A fire of suspicious origin swept through the luxury liner during a voyage from Havana. The ship beached near Asbury Park with 137 dead, prompting sweeping changes to US maritime fire safety regulations.",src:["https://en.wikipedia.org/wiki/SS_Morro_Castle_(1930)"]},
+{name:"HMS Thetis",date:"1939-06-01",lat:53.44,lon:-3.90,cls:"submarine",deaths:99,sea:"Liverpool Bay, Irish Sea",precision:"approx",desc:"The newly built submarine sank during sea trials when a torpedo tube flooded. 99 of 103 aboard died. The boat was later salvaged and recommissioned as HMS Thunderbolt, only to be lost again in 1943.",src:["https://en.wikipedia.org/wiki/HMS_Thetis_(N25)"]},
+{name:"USS Squalus",date:"1939-05-23",lat:42.87,lon:-70.62,cls:"submarine",deaths:26,sea:"Atlantic Ocean, off Portsmouth, New Hampshire, USA",precision:"approx",desc:"A main induction valve failure flooded the submarine during a test dive. 33 men were rescued using the newly developed McCann Rescue Chamber, but 26 in the flooded aft compartments died.",src:["https://en.wikipedia.org/wiki/USS_Squalus"]},
+{name:"SS Athenia",date:"1939-09-03",lat:56.72,lon:-14.42,cls:"ferry",deaths:117,sea:"North Atlantic, off the Hebrides, Scotland",precision:"approx",desc:"Torpedoed without warning by German submarine U-30 hours after Britain declared war, Athenia was the first British ship sunk in WWII, carrying civilians and evacuees to Canada.",src:["https://en.wikipedia.org/wiki/SS_Athenia"]},
+{name:"HMS Royal Oak",date:"1939-10-14",lat:58.88,lon:-2.99,cls:"military",deaths:835,sea:"Scapa Flow, Orkney Islands, Scotland",precision:"exact",desc:"German U-boat U-47, commanded by Günther Prien, penetrated the Royal Navy anchorage at Scapa Flow and torpedoed the battleship at anchor — a major early propaganda blow to Britain.",src:["https://en.wikipedia.org/wiki/HMS_Royal_Oak_(08)"]},
+{name:"RMS Lancastria",date:"1940-06-17",lat:47.15,lon:-2.18,cls:"ferry",deaths:4000,sea:"Bay of Biscay, off Saint-Nazaire, France",precision:"approx",desc:"Requisitioned as a troopship for the evacuation of British forces from France, Lancastria was bombed and sunk. With an estimated 4,000+ dead, it remains Britain's worst single-ship maritime disaster.",src:["https://en.wikipedia.org/wiki/RMS_Lancastria"]},
+{name:"HMS Hood",date:"1941-05-24",lat:63.33,lon:-31.83,cls:"military",deaths:1415,sea:"Denmark Strait, North Atlantic",precision:"approx",desc:"The pride of the Royal Navy exploded and sank within minutes after a magazine detonation during the Battle of the Denmark Strait. Only 3 of 1,418 crew survived.",src:["https://en.wikipedia.org/wiki/HMS_Hood"]},
+{name:"Bismarck",date:"1941-05-27",lat:48.17,lon:-16.20,cls:"military",deaths:2091,sea:"North Atlantic, west of Brest, France",precision:"exact",desc:"Cornered by a large British fleet after sinking HMS Hood, the German battleship was crippled by torpedo bombers and scuttled by her own crew in one of the most famous naval hunts of the war.",src:["https://en.wikipedia.org/wiki/German_battleship_Bismarck"]},
+{name:"USS Reuben James",date:"1941-10-31",lat:51.4,lon:-27.0,cls:"military",deaths:100,sea:"North Atlantic, near Iceland",precision:"approx",desc:"Torpedoed by U-552 while escorting a convoy, the destroyer was the first US Navy warship lost in WWII, sunk before the United States formally entered the war.",src:["https://en.wikipedia.org/wiki/USS_Reuben_James_(DD-245)"]},
+{name:"HMS Barham",date:"1941-11-25",lat:32.13,lon:26.50,cls:"military",deaths:862,sea:"Mediterranean Sea, off Egypt",precision:"approx",desc:"Struck by three torpedoes from U-331, the battleship rolled over and her magazine exploded. The famous newsreel footage was withheld from the public for months.",src:["https://en.wikipedia.org/wiki/HMS_Barham_(04)"]},
+{name:"HMS Prince of Wales",date:"1941-12-10",lat:3.55,lon:104.48,cls:"military",deaths:327,sea:"South China Sea, off Kuantan, Malaya",precision:"exact",desc:"Sunk alongside HMS Repulse by Japanese aircraft, demonstrating for the first time that capital ships without air cover were fatally vulnerable to air power.",src:["https://en.wikipedia.org/wiki/HMS_Prince_of_Wales_(53)"]},
+{name:"HMS Repulse",date:"1941-12-10",lat:3.62,lon:104.47,cls:"military",deaths:513,sea:"South China Sea, off Kuantan, Malaya",precision:"exact",desc:"Sunk in the same engagement as HMS Prince of Wales, the loss of both capital ships was a severe blow to Allied naval power in the Pacific.",src:["https://en.wikipedia.org/wiki/HMS_Repulse_(1916)"]},
+{name:"USS Arizona",date:"1941-12-07",lat:21.3649,lon:-157.9499,cls:"military",deaths:1177,sea:"Pearl Harbor, Oahu, Hawaii",precision:"exact",desc:"Struck by a bomb that detonated her forward magazine, Arizona sank in minutes during the Japanese attack on Pearl Harbor. Her wreck remains a war grave beneath the USS Arizona Memorial.",src:["https://en.wikipedia.org/wiki/USS_Arizona_(BB-39)"]},
+{name:"USS Oklahoma",date:"1941-12-07",lat:21.3658,lon:-157.9509,cls:"military",deaths:429,sea:"Pearl Harbor, Oahu, Hawaii",precision:"exact",desc:"Struck by multiple torpedoes, the battleship capsized within minutes. Several trapped sailors were rescued by cutting through the upturned hull.",src:["https://en.wikipedia.org/wiki/USS_Oklahoma_(BB-37)"]},
+{name:"Struma",date:"1942-02-24",lat:41.30,lon:29.09,cls:"ferry",deaths:781,sea:"Black Sea, near Istanbul, Turkey",precision:"approx",desc:"An overcrowded refugee ship carrying Jewish emigrants fleeing Romania was torpedoed by a Soviet submarine after being refused entry. Only one person survived.",src:["https://en.wikipedia.org/wiki/Struma_disaster"]},
+{name:"HMAS Sydney",date:"1941-11-19",lat:-26.15,lon:111.15,cls:"military",deaths:645,sea:"Indian Ocean, off Western Australia",precision:"exact",desc:"The Australian light cruiser was sunk in a mutually destructive engagement with the German auxiliary cruiser Kormoran. All 645 crew were lost. The wreck was not found until 2008.",src:["https://en.wikipedia.org/wiki/HMAS_Sydney_(D48)"]},
+{name:"Yamato",date:"1945-04-07",lat:30.72,lon:128.04,cls:"military",deaths:3055,sea:"East China Sea, off Kyushu, Japan",precision:"approx",desc:"The largest battleship ever built was overwhelmed by waves of US carrier aircraft during Operation Ten-Go. Of the 3,332 crew, only 277 survived.",src:["https://en.wikipedia.org/wiki/Japanese_battleship_Yamato"]},
+{name:"Scharnhorst",date:"1943-12-26",lat:72.16,lon:28.41,cls:"military",deaths:1932,sea:"Arctic Ocean, Battle of the North Cape",precision:"approx",desc:"Intercepted by a British force while attacking an Arctic convoy, the battlecruiser was sunk in polar darkness; only 36 of nearly 2,000 crew survived the freezing waters.",src:["https://en.wikipedia.org/wiki/German_battleship_Scharnhorst"]},
+{name:"Junyo Maru",date:"1944-09-18",lat:-3.95,lon:100.04,cls:"cargo",deaths:5620,sea:"Indian Ocean, off Sumatra",precision:"approx",desc:"A Japanese cargo ship carrying Allied POWs and Javanese forced labourers was torpedoed by HMS Tradewind, unaware of the human cargo — one of the deadliest maritime disasters in history.",src:["https://en.wikipedia.org/wiki/Jun%27y%C5%8D_Maru"]},
+{name:"Musashi",date:"1944-10-24",lat:12.86,lon:122.52,cls:"military",deaths:1023,sea:"Sibuyan Sea, Philippines",precision:"exact",desc:"The sister ship of Yamato was overwhelmed by US carrier aircraft during the Battle of Leyte Gulf. Her wreck was discovered by Paul Allen's research vessel in 2015.",src:["https://en.wikipedia.org/wiki/Japanese_battleship_Musashi"]},
+{name:"Wilhelm Gustloff",date:"1945-01-30",lat:55.07,lon:17.42,cls:"ferry",deaths:9400,sea:"Baltic Sea, off Stolpmünde (Ustka), Poland",precision:"approx",desc:"Packed with German refugees fleeing the Red Army, the ship was torpedoed by Soviet submarine S-13. With an estimated 9,000+ deaths, it remains the deadliest single-ship sinking in history.",src:["https://en.wikipedia.org/wiki/MV_Wilhelm_Gustloff"]},
+{name:"Goya",date:"1945-04-16",lat:55.13,lon:18.32,cls:"ferry",deaths:6900,sea:"Baltic Sea, off Pomerania",precision:"approx",desc:"Another overloaded refugee ship torpedoed by a Soviet submarine; she sank in four minutes, killing nearly everyone aboard.",src:["https://en.wikipedia.org/wiki/MV_Goya"]},
+{name:"Cap Arcona",date:"1945-05-03",lat:54.08,lon:10.77,cls:"ferry",deaths:4500,sea:"Bay of Lübeck, Baltic Sea",precision:"approx",desc:"Loaded with concentration camp prisoners from Neuengamme, the ship was mistakenly bombed by RAF aircraft days before the war ended, killing thousands of prisoners.",src:["https://en.wikipedia.org/wiki/SS_Cap_Arcona"]},
+{name:"USS Indianapolis",date:"1945-07-30",lat:12.02,lon:134.48,cls:"military",deaths:879,sea:"Philippine Sea",precision:"approx",desc:"Days after delivering atomic bomb components, the cruiser was torpedoed by a Japanese submarine. Delayed rescue left survivors adrift for days facing exposure and shark attacks — the worst single loss at sea in US Navy history.",src:["https://en.wikipedia.org/wiki/USS_Indianapolis_(CA-35)"]},
+{name:"SS Kiangya",date:"1948-12-04",lat:31.30,lon:121.90,cls:"ferry",deaths:2750,sea:"Huangpu River estuary, China",precision:"approx",desc:"The overcrowded Chinese passenger steamer struck a wartime mine near Shanghai. Packed with refugees fleeing the Chinese Civil War, the explosion and sinking killed an estimated 2,750–3,920 people.",src:["https://en.wikipedia.org/wiki/SS_Kiangya"]},
+{name:"Toya Maru",date:"1954-09-26",lat:41.77,lon:140.69,cls:"ferry",deaths:1153,sea:"Tsugaru Strait, Japan",precision:"approx",desc:"A rail ferry capsized in Typhoon Marie while crossing between Honshu and Hokkaido — the deadliest maritime disaster in Japanese history.",src:["https://en.wikipedia.org/wiki/Toya_Maru"]},
+{name:"SS Andrea Doria",date:"1956-07-25",lat:40.30,lon:-69.69,cls:"ferry",deaths:46,sea:"Atlantic Ocean, off Nantucket, USA",precision:"exact",desc:"The Italian luxury liner collided with the Swedish liner Stockholm in fog. Most of the 1,660 aboard were saved in one of the largest civilian sea rescues in history.",src:["https://en.wikipedia.org/wiki/SS_Andrea_Doria"]},
+{name:"USS Thresher",date:"1963-04-10",lat:41.73,lon:-64.97,cls:"submarine",deaths:129,sea:"Atlantic Ocean, east of Cape Cod, USA",precision:"exact",desc:"The nuclear attack submarine was lost with all 129 hands during deep-dive trials. A piping failure led to flooding and loss of reactor power. The disaster prompted the US Navy's SUBSAFE program.",src:["https://en.wikipedia.org/wiki/USS_Thresher_(SSN-593)"]},
+{name:"HMHS Melbourne / HMAS Voyager",date:"1964-02-10",lat:-35.28,lon:150.18,cls:"military",deaths:82,sea:"Jervis Bay, New South Wales, Australia",precision:"approx",desc:"The destroyer HMAS Voyager was cut in two when she crossed the bow of the aircraft carrier HMAS Melbourne during night exercises. 82 of Voyager's crew were killed.",src:["https://en.wikipedia.org/wiki/HMAS_Voyager_(D04)"]},
+{name:"Torrey Canyon",date:"1967-03-18",lat:49.91,lon:-6.38,cls:"enviro",deaths:0,sea:"Atlantic Ocean, off the Isles of Scilly, England",precision:"exact",desc:"The supertanker ran aground on Pollard's Rock, spilling roughly 119,000 tonnes of crude oil — the first super-tanker oil spill and a catalyst for modern maritime pollution law.",src:["https://en.wikipedia.org/wiki/Torrey_Canyon_oil_spill"]},
+{name:"USS Scorpion",date:"1968-05-22",lat:32.92,lon:-33.15,cls:"submarine",deaths:99,sea:"Atlantic Ocean, southwest of the Azores",precision:"approx",desc:"The nuclear submarine was lost with all hands under circumstances still debated. Wreckage was located months later at 3,000m depth. One of only two nuclear submarines the US Navy has lost.",src:["https://en.wikipedia.org/wiki/USS_Scorpion_(SSN-589)"]},
+{name:"Amoco Cadiz",date:"1978-03-16",lat:48.59,lon:-4.74,cls:"enviro",deaths:0,sea:"English Channel, off Brittany, France",precision:"exact",desc:"A steering failure drove the supertanker aground, spilling its entire cargo of 1.6 million barrels of crude oil along the Breton coastline in one of the largest spills in maritime history.",src:["https://en.wikipedia.org/wiki/Amoco_Cadiz"]},
+{name:"MV Tampomas II",date:"1981-01-27",lat:-5.74,lon:108.80,cls:"ferry",deaths:580,sea:"Java Sea, Indonesia",precision:"approx",desc:"A fire broke out aboard the overloaded inter-island ferry, which eventually sank. Delayed and chaotic evacuation contributed to the heavy death toll.",src:["https://en.wikipedia.org/wiki/MV_Tampomas_II"]},
+{name:"Ocean Ranger",date:"1982-02-15",lat:46.63,lon:-48.39,cls:"enviro",deaths:84,sea:"Grand Banks, off Newfoundland, Canada",precision:"approx",desc:"The world's largest semi-submersible oil drilling platform capsized and sank in a severe winter storm on the Grand Banks, killing all 84 workers aboard.",src:["https://en.wikipedia.org/wiki/Ocean_Ranger"]},
+{name:"ARA General Belgrano",date:"1982-05-02",lat:-55.27,lon:-61.87,cls:"military",deaths:323,sea:"South Atlantic, near the Falkland Islands",precision:"exact",desc:"Torpedoed by the British nuclear submarine HMS Conqueror during the Falklands War. The sinking of the former USS Phoenix remains the conflict's most lethal single episode.",src:["https://en.wikipedia.org/wiki/ARA_General_Belgrano"]},
+{name:"HMS Sheffield",date:"1982-05-04",lat:-53.57,lon:-56.93,cls:"military",deaths:20,sea:"South Atlantic, Falklands War zone",precision:"approx",desc:"Struck by an Exocet anti-ship missile from an Argentine Super Étendard — the first Royal Navy ship lost in combat since WWII.",src:["https://en.wikipedia.org/wiki/HMS_Sheffield_(D80)"]},
+{name:"HMS Coventry",date:"1982-05-25",lat:-51.28,lon:-59.98,cls:"military",deaths:19,sea:"North Falkland Sound, Falkland Islands",precision:"approx",desc:"The destroyer was hit by three bombs from Argentine A-4 Skyhawks during the Falklands War. She capsized and sank within 20 minutes.",src:["https://en.wikipedia.org/wiki/HMS_Coventry_(D118)"]},
+{name:"Admiral Nakhimov",date:"1986-08-31",lat:44.60,lon:37.89,cls:"ferry",deaths:423,sea:"Tsemes Bay, Black Sea, near Novorossiysk, Russia",precision:"exact",desc:"The Soviet passenger liner collided with the bulk carrier Pyotr Vasyov and sank within minutes in Tsemes Bay. 423 of the 1,234 aboard perished.",src:["https://en.wikipedia.org/wiki/SS_Admiral_Nakhimov"]},
+{name:"Herald of Free Enterprise",date:"1987-03-06",lat:51.35,lon:3.20,cls:"ferry",deaths:193,sea:"Off Zeebrugge, Belgium",precision:"exact",desc:"The ro-ro ferry capsized within minutes of departure after sailing with bow doors open. The disaster led to sweeping reforms in ferry safety design worldwide.",src:["https://en.wikipedia.org/wiki/MS_Herald_of_Free_Enterprise"]},
+{name:"MV Doña Paz",date:"1987-12-20",lat:12.25,lon:121.78,cls:"ferry",deaths:4386,sea:"Tablas Strait, Philippines",precision:"approx",desc:"The ferry collided with the tanker MT Vector and burned. With over 4,300 estimated deaths, it is the deadliest peacetime maritime disaster in history.",src:["https://en.wikipedia.org/wiki/MV_Do%C3%B1a_Paz"]},
+{name:"Exxon Valdez",date:"1989-03-24",lat:60.84,lon:-146.88,cls:"enviro",deaths:0,sea:"Prince William Sound, Alaska, USA",precision:"exact",desc:"The tanker struck Bligh Reef and spilled 11–38 million gallons of crude oil, devastating coastal ecosystems in one of the most consequential environmental disasters in US history.",src:["https://en.wikipedia.org/wiki/Exxon_Valdez_oil_spill"]},
+{name:"K-278 Komsomolets",date:"1989-04-07",lat:73.72,lon:13.28,cls:"submarine",deaths:42,sea:"Norwegian Sea, Arctic",precision:"approx",desc:"A fire aboard the Soviet nuclear submarine spread uncontrollably, forcing an emergency surfacing. 42 sailors died, many from hypothermia in Arctic waters. The reactor remains on the seabed.",src:["https://en.wikipedia.org/wiki/Soviet_submarine_K-278_Komsomolets"]},
+{name:"MV Salem Express",date:"1991-12-16",lat:27.25,lon:33.94,cls:"ferry",deaths:470,sea:"Red Sea, off Safaga, Egypt",precision:"exact",desc:"The Egyptian ferry struck a coral reef in poor weather while returning from Jeddah. She sank in minutes; the wreck lies in shallow water and is now a popular dive site.",src:["https://en.wikipedia.org/wiki/Salem_Express"]},
+{name:"ABG 5",date:"1993-10-10",lat:13.70,lon:121.00,cls:"ferry",deaths:140,sea:"Tablas Strait, Philippines",precision:"approx",desc:"The Philippine inter-island ferry capsized in heavy seas brought by Typhoon Joan, killing approximately 140 people.",src:["https://en.wikipedia.org/wiki/MV_Cebu_City"]},
+{name:"MS Estonia",date:"1994-09-28",lat:59.38,lon:21.69,cls:"ferry",deaths:852,sea:"Baltic Sea, between Estonia and Sweden",precision:"exact",desc:"The bow visor separated in heavy seas, flooding the car deck. The ferry capsized and sank in under an hour — the deadliest peacetime shipwreck in European waters since WWII.",src:["https://en.wikipedia.org/wiki/MS_Estonia"]},
+{name:"MV Bukoba",date:"1996-05-21",lat:-1.50,lon:31.80,cls:"ferry",deaths:800,sea:"Lake Victoria, Tanzania",precision:"approx",desc:"A severely overloaded passenger ferry capsized on Lake Victoria. Official tolls were long disputed, with estimates exceeding 800 dead.",src:["https://en.wikipedia.org/wiki/MV_Bukoba"]},
+{name:"Erika",date:"1999-12-12",lat:47.28,lon:-3.83,cls:"enviro",deaths:0,sea:"Bay of Biscay, off Brittany, France",precision:"approx",desc:"The aging tanker broke in two in a storm, spilling 20,000 tonnes of heavy fuel oil across hundreds of kilometres of French coastline, prompting tighter EU tanker regulations.",src:["https://en.wikipedia.org/wiki/MV_Erika"]},
+{name:"Kursk (K-141)",date:"2000-08-12",lat:69.62,lon:37.58,cls:"submarine",deaths:118,sea:"Barents Sea, Arctic Russia",precision:"exact",desc:"A faulty torpedo exploded during exercises, triggering a catastrophic secondary explosion. All 118 aboard died. The slow international rescue response caused lasting controversy.",src:["https://en.wikipedia.org/wiki/Kursk_submarine_disaster"]},
+{name:"MV Le Joola",date:"2002-09-26",lat:13.52,lon:-17.13,cls:"ferry",deaths:1863,sea:"Atlantic Ocean, off The Gambia / Senegal",precision:"approx",desc:"The Senegalese state-run ferry capsized in a storm while badly overloaded. With nearly 1,900 dead, it is one of the worst non-military maritime disasters ever recorded.",src:["https://en.wikipedia.org/wiki/MV_Le_Joola"]},
+{name:"Prestige",date:"2002-11-19",lat:42.18,lon:-12.03,cls:"enviro",deaths:0,sea:"Atlantic Ocean, off Galicia, Spain",precision:"approx",desc:"The single-hulled tanker split apart and sank, releasing tens of thousands of tonnes of fuel oil that fouled thousands of kilometres of Spanish, French, and Portuguese coastline.",src:["https://en.wikipedia.org/wiki/Prestige_oil_spill"]},
+{name:"Tricolor",date:"2002-12-14",lat:51.04,lon:1.55,cls:"cargo",deaths:0,sea:"English Channel, Strait of Dover",precision:"exact",desc:"A car carrier loaded with 2,862 luxury vehicles collided with a container ship and capsized in one of the world's busiest shipping lanes. She was struck twice more before being cleared.",src:["https://en.wikipedia.org/wiki/MV_Tricolor"]},
+{name:"Ehime Maru",date:"2001-02-09",lat:21.30,lon:-157.60,cls:"cargo",deaths:9,sea:"Pacific Ocean, off Oahu, Hawaii",precision:"approx",desc:"The Japanese fisheries training vessel was struck and sunk by the surfacing US nuclear submarine USS Greeneville during a demonstration cruise, killing 9 including 4 high school students.",src:["https://en.wikipedia.org/wiki/Ehime_Maru_and_USS_Greeneville_collision"]},
+{name:"SuperFerry 14",date:"2004-02-27",lat:14.45,lon:120.65,cls:"ferry",deaths:116,sea:"Manila Bay, Philippines",precision:"approx",desc:"A bomb planted by Abu Sayyaf militants caused a fire that sank the ferry — the deadliest terrorist attack at sea in modern history.",src:["https://en.wikipedia.org/wiki/Superferry_14"]},
+{name:"Al-Salam Boccaccio 98",date:"2006-02-03",lat:27.44,lon:35.34,cls:"ferry",deaths:1018,sea:"Red Sea, between Egypt and Saudi Arabia",precision:"approx",desc:"The Egyptian ferry caught fire and capsized during a Red Sea crossing, with over 1,000 lives lost amid criticism of delayed rescue efforts.",src:["https://en.wikipedia.org/wiki/MS_al-Salam_Boccaccio_98"]},
+{name:"MSC Napoli",date:"2007-01-18",lat:50.47,lon:-3.12,cls:"cargo",deaths:0,sea:"English Channel, off Devon, England",precision:"approx",desc:"The container ship suffered severe hull damage in a storm and was deliberately beached off the English coast to prevent it from breaking apart.",src:["https://en.wikipedia.org/wiki/MSC_Napoli"]},
+{name:"Cheonan",date:"2010-03-26",lat:37.93,lon:124.60,cls:"military",deaths:46,sea:"Yellow Sea, off Baengnyeong Island, South Korea",precision:"exact",desc:"The South Korean corvette was sunk by what an international investigation concluded was a North Korean torpedo. 46 sailors were killed in one of the most provocative post-Korean War incidents.",src:["https://en.wikipedia.org/wiki/ROKS_Cheonan_sinking"]},
+{name:"Princess of the Stars",date:"2008-06-21",lat:12.37,lon:122.48,cls:"ferry",deaths:800,sea:"Sibuyan Sea, Philippines",precision:"approx",desc:"The ferry capsized in Typhoon Fengshen after sailing despite storm warnings. More than 800 people are believed to have died.",src:["https://en.wikipedia.org/wiki/MV_Princess_of_the_Stars"]},
+{name:"Deepwater Horizon",date:"2010-04-20",lat:28.74,lon:-88.39,cls:"enviro",deaths:11,sea:"Gulf of Mexico, off Louisiana, USA",precision:"exact",desc:"A blowout triggered an explosion and the largest marine oil spill in history, releasing 4.9 million barrels over 87 days. 11 workers were killed in the initial explosion.",src:["https://en.wikipedia.org/wiki/Deepwater_Horizon_oil_spill"]},
+{name:"MV Spice Islander I",date:"2011-09-10",lat:-5.90,lon:39.50,cls:"ferry",deaths:240,sea:"Indian Ocean, off Zanzibar, Tanzania",precision:"approx",desc:"The severely overcrowded ferry sank near Zanzibar. Official reports confirmed approximately 240 dead, though actual figures may be much higher.",src:["https://en.wikipedia.org/wiki/MV_Spice_Islander_I"]},
+{name:"MV Rabaul Queen",date:"2012-02-02",lat:-5.50,lon:148.00,cls:"ferry",deaths:146,sea:"Solomon Sea, off Papua New Guinea",precision:"approx",desc:"The ferry sank in rough seas. Investigations pointed to overloading and inadequate stability as the primary causes.",src:["https://en.wikipedia.org/wiki/MV_Rabaul_Queen"]},
+{name:"Costa Concordia",date:"2012-01-13",lat:42.3662,lon:10.9215,cls:"ferry",deaths:32,sea:"Tyrrhenian Sea, off Giglio Island, Italy",precision:"exact",desc:"The cruise liner struck a rock during an unauthorised close pass and capsized in shallow water. Captain Schettino's early abandonment drew global attention to cruise safety.",src:["https://en.wikipedia.org/wiki/Costa_Concordia_disaster"]},
+{name:"MOL Comfort",date:"2013-06-17",lat:13.42,lon:54.67,cls:"cargo",deaths:0,sea:"Arabian Sea, off Yemen",precision:"approx",desc:"The large container ship broke in half and sank in the Arabian Sea during monsoon weather. All 26 crew were rescued, but the loss raised questions about large container ship hull integrity.",src:["https://en.wikipedia.org/wiki/MOL_Comfort"]},
+{name:"INS Sindhurakshak",date:"2013-08-14",lat:18.93,lon:72.84,cls:"submarine",deaths:18,sea:"Mumbai Naval Dockyard, India",precision:"exact",desc:"Explosions, likely from torpedo warheads, sank the Indian Navy submarine at her berth, killing all 18 crew aboard in India's worst submarine disaster.",src:["https://en.wikipedia.org/wiki/INS_Sindhurakshak_(S63)"]},
+{name:"MV Sewol",date:"2014-04-16",lat:34.22,lon:125.95,cls:"ferry",deaths:304,sea:"Yellow Sea, off Jindo, South Korea",precision:"exact",desc:"The overloaded ferry capsized after a sharp turn. Crew instructions to stay put led to the deaths of 304 people, mostly high school students, becoming a national reckoning.",src:["https://en.wikipedia.org/wiki/Sinking_of_MV_Sewol"]},
+{name:"SS El Faro",date:"2015-10-01",lat:23.40,lon:-73.40,cls:"cargo",deaths:33,sea:"Atlantic Ocean, near the Bahamas",precision:"approx",desc:"The cargo ship sailed into Hurricane Joaquin and sank with all hands — the worst US commercial shipping loss in decades, traced to outdated weather routing.",src:["https://en.wikipedia.org/wiki/SS_El_Faro"]},
+{name:"Dong Fang Zhi Xing",date:"2015-06-01",lat:29.96,lon:113.10,cls:"ferry",deaths:442,sea:"Yangtze River, Jianli, Hubei, China",precision:"approx",desc:"The Yangtze River cruise ship capsized in a sudden severe storm (likely a tornado). 442 of 454 aboard died, making it China's deadliest maritime disaster in decades.",src:["https://en.wikipedia.org/wiki/Sinking_of_Dong_Fang_Zhi_Xing"]},
+{name:"USS Fitzgerald",date:"2017-06-17",lat:34.57,lon:139.65,cls:"military",deaths:7,sea:"Pacific Ocean, off Yokosuka, Japan",precision:"approx",desc:"The destroyer collided with the container ship ACX Crystal off Japan, flooding crew compartments and killing 7 sailors. The collision exposed gaps in US Navy readiness.",src:["https://en.wikipedia.org/wiki/USS_Fitzgerald_(DDG-62)"]},
+{name:"USS John S. McCain",date:"2017-08-21",lat:1.22,lon:104.30,cls:"military",deaths:10,sea:"Strait of Malacca / Singapore Strait",precision:"approx",desc:"A steering-control error led to a collision with the tanker Alnic MC near Singapore, killing 10 sailors and triggering a fleet-wide safety review.",src:["https://en.wikipedia.org/wiki/USS_John_S._McCain_(DDG-56)"]},
+{name:"ARA San Juan",date:"2017-11-15",lat:-46.12,lon:-59.69,cls:"submarine",deaths:44,sea:"South Atlantic, off Argentine Patagonia",precision:"exact",desc:"The diesel-electric submarine disappeared during a training exercise; an implosion was detected acoustically. The wreck was located a year later at 907m depth.",src:["https://en.wikipedia.org/wiki/ARA_San_Juan_(S-42)"]},
+{name:"Sanchi (MT Sanchi)",date:"2018-01-06",lat:30.80,lon:124.97,cls:"enviro",deaths:32,sea:"East China Sea, off Shanghai",precision:"approx",desc:"The Iranian oil tanker collided with the bulk carrier CF Crystal and burned for over a week before sinking, killing all 32 crew. 136,000 tonnes of condensate were lost.",src:["https://en.wikipedia.org/wiki/Sanchi_oil_tanker_collision"]},
+{name:"MV Nyerere",date:"2018-09-20",lat:-2.27,lon:32.88,cls:"ferry",deaths:228,sea:"Lake Victoria, Tanzania",precision:"approx",desc:"The severely overloaded passenger ferry capsized metres from the dock, killing over 220 people in one of Lake Victoria's worst disasters.",src:["https://en.wikipedia.org/wiki/MV_Nyerere"]},
+{name:"KRI Nanggala",date:"2021-04-21",lat:-8.24,lon:115.16,cls:"submarine",deaths:53,sea:"Bali Sea, north of Bali, Indonesia",precision:"approx",desc:"The Indonesian Navy submarine was lost during a torpedo drill. She was found broken apart at 838m depth — well beyond her crush depth. All 53 aboard perished.",src:["https://en.wikipedia.org/wiki/KRI_Nanggala_(402)"]},
+{name:"MV Conception",date:"2019-09-02",lat:34.05,lon:-119.74,cls:"ferry",deaths:34,sea:"Santa Cruz Island, California, USA",precision:"exact",desc:"The dive boat caught fire while anchored at night. 34 people — 33 passengers and 1 crew — were killed while sleeping below deck, trapped by the blaze.",src:["https://en.wikipedia.org/wiki/Conception_boat_fire"]},
+{name:"Grande America",date:"2019-03-12",lat:46.18,lon:-6.63,cls:"cargo",deaths:0,sea:"Bay of Biscay, off France",precision:"approx",desc:"The Italian con-ro ship caught fire in the Bay of Biscay and sank in 4,600m of water. All 27 aboard were rescued by HMS Argyll. The ship carried 2,000+ vehicles.",src:["https://en.wikipedia.org/wiki/Grande_America"]},
+{name:"MV Wakashio",date:"2020-07-25",lat:-20.43,lon:57.73,cls:"enviro",deaths:0,sea:"Indian Ocean, off Mauritius",precision:"exact",desc:"The Japanese bulk carrier ran aground on a coral reef at Pointe d'Esny, Mauritius, spilling 1,000 tonnes of fuel oil near Blue Bay Marine Park — the island's worst environmental disaster.",src:["https://en.wikipedia.org/wiki/MV_Wakashio_oil_spill"]},
+{name:"MV Golden Ray",date:"2019-09-08",lat:31.13,lon:-81.39,cls:"cargo",deaths:0,sea:"St. Simons Sound, Georgia, USA",precision:"exact",desc:"The car carrier capsized in St. Simons Sound with 4,200 vehicles aboard. The massive salvage operation to cut and remove the vessel took over two years.",src:["https://en.wikipedia.org/wiki/MV_Golden_Ray"]},
+{name:"Ever Given",date:"2021-03-23",lat:30.02,lon:32.58,cls:"cargo",deaths:0,sea:"Suez Canal, Egypt",precision:"exact",desc:"High winds ran the giant container ship aground diagonally across the Suez Canal, blocking global trade for six days. The incident disrupted billions of dollars in commerce.",src:["https://en.wikipedia.org/wiki/Ever_Given"]},
+{name:"MV X-Press Pearl",date:"2021-05-20",lat:7.08,lon:79.78,cls:"enviro",deaths:0,sea:"Indian Ocean, off Colombo, Sri Lanka",precision:"exact",desc:"The container ship carrying nitric acid and plastic pellets caught fire and eventually sank, causing Sri Lanka's worst marine environmental disaster.",src:["https://en.wikipedia.org/wiki/MV_X-Press_Pearl"]},
+{name:"Moskva",date:"2022-04-14",lat:45.87,lon:30.98,cls:"military",deaths:40,sea:"Black Sea, south of Odesa, Ukraine",precision:"approx",desc:"The flagship of Russia's Black Sea Fleet sank after being struck by Ukrainian Neptune anti-ship missiles — the largest warship lost in combat since WWII.",src:["https://en.wikipedia.org/wiki/Russian_cruiser_Moskva"]},
+{name:"Felicity Ace",date:"2022-02-16",lat:37.06,lon:-30.48,cls:"cargo",deaths:0,sea:"North Atlantic, off the Azores, Portugal",precision:"approx",desc:"The car carrier caught fire in the Atlantic, reportedly ignited by lithium-ion batteries in EVs. She sank with approximately 4,000 luxury vehicles aboard.",src:["https://en.wikipedia.org/wiki/Felicity_Ace"]},
+{name:"Titan (submersible)",date:"2023-06-18",lat:41.73,lon:-49.95,cls:"submarine",deaths:5,sea:"North Atlantic, Titanic wreck site",precision:"exact",desc:"The OceanGate Titan submersible imploded during a descent to the Titanic wreck, killing all 5 occupants instantly. The disaster raised serious questions about unregulated submersible tourism.",src:["https://en.wikipedia.org/wiki/Titan_submersible_implosion"]},
+{name:"MV Bayesian",date:"2024-08-19",lat:38.08,lon:13.38,cls:"ferry",deaths:7,sea:"Tyrrhenian Sea, off Porticello, Sicily, Italy",precision:"exact",desc:"The luxury superyacht sank rapidly after being struck by a violent waterspout/storm off Sicily. 7 of the 22 aboard died, including tech entrepreneur Mike Lynch.",src:["https://en.wikipedia.org/wiki/Bayesian_(yacht)"]},
+{name:"SS Mendi",date:"1917-02-21",lat:50.50,lon:-1.52,cls:"military",deaths:646,sea:"English Channel, off Isle of Wight, England",precision:"approx",desc:"A troopship carrying members of the South African Native Labour Corps was struck by the SS Darro in fog. 646 men drowned, mostly Black South African labourers. It remains one of South Africa's greatest wartime losses.",src:["https://en.wikipedia.org/wiki/SS_Mendi"]},
+{name:"SS Eastland",date:"1915-07-24",lat:41.887,lon:-87.632,cls:"ferry",deaths:844,sea:"Chicago River, Chicago, Illinois, USA",precision:"exact",desc:"The excursion steamer rolled onto her side while still moored at a Chicago dock, drowning 844 passengers in one of the deadliest maritime disasters in US history. Top-heavy lifeboats contributed to instability.",src:["https://en.wikipedia.org/wiki/SS_Eastland"]},
+{name:"RMS Lusitania",date:"1915-05-07",lat:51.40,lon:-8.55,cls:"ferry",deaths:1198,sea:"Celtic Sea, off Old Head of Kinsale, Ireland",precision:"exact",desc:"The British ocean liner was torpedoed by German submarine U-20 during WWI, killing 1,198 including 128 Americans. The sinking turned public opinion against Germany and helped draw the US into the war.",src:["https://en.wikipedia.org/wiki/RMS_Lusitania"]},
+{name:"HMHS Britannic",date:"1916-11-21",lat:37.72,lon:24.28,cls:"military",deaths:30,sea:"Kea Channel, Aegean Sea, Greece",precision:"exact",desc:"The Titanic's sister ship, serving as a hospital ship in WWI, struck a mine and sank in 55 minutes. Only 30 of the 1,066 aboard were killed, thanks to improved safety measures after the Titanic.",src:["https://en.wikipedia.org/wiki/HMHS_Britannic"]},
+{name:"SS Mont-Blanc",date:"1917-12-06",lat:44.67,lon:-63.59,cls:"cargo",deaths:1950,sea:"Halifax Harbour, Nova Scotia, Canada",precision:"exact",desc:"The French munitions ship collided with the Norwegian vessel SS Imo in Halifax Harbour. The resulting Halifax Explosion devastated the city, killing nearly 2,000 people and injuring 9,000 — the largest man-made explosion before nuclear weapons.",src:["https://en.wikipedia.org/wiki/Halifax_Explosion"]},
+{name:"Iolaire",date:"1919-01-01",lat:58.21,lon:-6.37,cls:"military",deaths:201,sea:"The Minch, off Stornoway, Isle of Lewis, Scotland",precision:"approx",desc:"The naval yacht carrying soldiers home to Lewis after WWI struck rocks just outside Stornoway harbour. 201 of 280 aboard died within sight of shore — a devastating blow to the small island community.",src:["https://en.wikipedia.org/wiki/HMY_Iolaire"]},
+{name:"Principessa Mafalda",date:"1927-10-25",lat:-22.00,lon:-35.00,cls:"ferry",deaths:314,sea:"South Atlantic, off Brazil",precision:"approx",desc:"The Italian luxury liner suffered a propeller shaft failure that breached her hull while en route to Buenos Aires. 314 of the 1,252 aboard died in a chaotic evacuation.",src:["https://en.wikipedia.org/wiki/SS_Principessa_Mafalda"]},
+{name:"Stella Daisy",date:"2017-03-31",lat:-33.60,lon:-29.80,cls:"cargo",deaths:22,sea:"South Atlantic Ocean",precision:"approx",desc:"The very large ore carrier broke apart and sank in the South Atlantic while carrying 260,000 tonnes of iron ore from Brazil to China. Only 2 of the 24 crew survived.",src:["https://en.wikipedia.org/wiki/MV_Stellar_Daisy"]},
+{name:"MV Cemfjord",date:"2015-01-02",lat:58.63,lon:-2.55,cls:"cargo",deaths:8,sea:"Pentland Firth, Scotland",precision:"approx",desc:"The cement carrier capsized and sank in heavy seas in the Pentland Firth. All 8 crew members were lost. The vessel was seen capsized by a passing ferry, but no distress signal was received.",src:["https://en.wikipedia.org/wiki/MV_Cemfjord"]},
+{name:"Bourbon Rhode",date:"2019-09-26",lat:14.81,lon:-46.07,cls:"cargo",deaths:11,sea:"Atlantic Ocean, near Martinique",precision:"approx",desc:"The anchor handling tug supply vessel broke in two and sank in Hurricane Lorenzo conditions in the Atlantic. 11 of the 14 crew were lost.",src:["https://en.wikipedia.org/wiki/Bourbon_Rhode"]},
+{name:"Stellar Banner",date:"2020-02-24",lat:-2.51,lon:-41.13,cls:"cargo",deaths:0,sea:"Atlantic Ocean, off Maranhão, Brazil",precision:"approx",desc:"The very large ore carrier ran aground off Brazil shortly after departing with 295,000 tonnes of iron ore. After cargo and fuel removal, she was intentionally scuttled in deep water.",src:["https://en.wikipedia.org/wiki/MV_Stellar_Banner"]},
+{name:"Seawise Giant (Knock Nevis)",date:"1988-05-14",lat:28.92,lon:49.68,cls:"enviro",deaths:0,sea:"Strait of Hormuz, Persian Gulf",precision:"approx",desc:"The largest ship ever built was struck by Iraqi Exocet missiles and set ablaze during the Iran-Iraq War. Although declared a total constructive loss, she was later salvaged and repaired.",src:["https://en.wikipedia.org/wiki/Seawise_Giant"]},
+{name:"Derbyshire",date:"1980-09-09",lat:25.28,lon:130.88,cls:"cargo",deaths:44,sea:"Pacific Ocean, south of Japan",precision:"approx",desc:"The largest British ship ever lost at sea sank during Typhoon Orchid. All 44 aboard perished. The wreck wasn't found until 1994, at 4,200m depth.",src:["https://en.wikipedia.org/wiki/MV_Derbyshire"]},
+];
+
+const ALL_INCIDENTS = INCIDENTS.concat(typeof EMODNET_INCIDENTS !== 'undefined' ? EMODNET_INCIDENTS : []);
+ALL_INCIDENTS.forEach(i => {
+  if (!i.src || i.src.length === 0 || i.src[0] === "EMODnet") {
+    i.src = [`https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(i.name)}+shipwreck`];
+  }
+});
+
+const INCIDENTS_CLEAN = ALL_INCIDENTS.filter(i => i.desc && i.desc.length > 10);
+
+const CLASS_META = {
+  military:{label:"Military",color:0xe8734a,css:"var(--military)"},
+  ferry:{label:"Passenger / Ferry",color:0x2dd4bf,css:"var(--ferry)"},
+  submarine:{label:"Submarine",color:0xa78bfa,css:"var(--submarine)"},
+  cargo:{label:"Cargo / Merchant",color:0xe3b23c,css:"var(--cargo)"},
+  enviro:{label:"Environmental",color:0xc98b4a,css:"var(--enviro)"}
+};
+let activeFilters = new Set(Object.keys(CLASS_META));
+let searchTerm = "";
+let yearFrom = 1910, yearTo = 2026;
+let selectedIncident = null;
+
+function incidentYear(i){ return parseInt(i.date.slice(0,4),10); }
+function passesFilter(i){
+  if(!activeFilters.has(i.cls)) return false;
+  const y = incidentYear(i);
+  if(y < yearFrom || y > yearTo) return false;
+  if(searchTerm && !i.name.toLowerCase().includes(searchTerm) && !i.sea.toLowerCase().includes(searchTerm) && !i.desc.toLowerCase().includes(searchTerm)) return false;
+  return true;
+}
+function fmtDate(d){
+  const dt = new Date(d+"T00:00:00Z");
+  return dt.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'UTC'});
+}
+function fmtCoords(lat,lon){
+  const la = Math.abs(lat).toFixed(4)+"°"+(lat>=0?"N":"S");
+  const lo = Math.abs(lon).toFixed(4)+"°"+(lon>=0?"E":"W");
+  return la+", "+lo;
+}
+function fmtDeaths(n){ return n>0 ? n.toLocaleString()+" (est.)" : "None reported"; }
+
+const chipWrap = document.getElementById('filterChips');
+function buildChips(){
+  chipWrap.innerHTML = "";
+  const allChip = document.createElement('div');
+  allChip.className = 'chip active';
+  allChip.id = 'chipAll';
+  allChip.innerHTML = '<span class="sw" style="background:#7c93a6"></span>All';
+  allChip.onclick = ()=>{ activeFilters = new Set(Object.keys(CLASS_META)); refreshUI(); };
+  chipWrap.appendChild(allChip);
+  Object.keys(CLASS_META).forEach(k=>{
+    const m = CLASS_META[k];
+    const el = document.createElement('div');
+    el.className = 'chip active';
+    el.dataset.cls = k;
+    el.style.color = m.css;
+    el.innerHTML = '<span class="sw" style="background:'+m.css+'"></span>'+m.label;
+    el.onclick = ()=>{
+      if(activeFilters.has(k)){ activeFilters.delete(k); } else { activeFilters.add(k); }
+      if(activeFilters.size===0) activeFilters = new Set(Object.keys(CLASS_META));
+      refreshUI();
+    };
+    chipWrap.appendChild(el);
+  });
+}
+function syncChips(){
+  const all = activeFilters.size === Object.keys(CLASS_META).length;
+  document.getElementById('chipAll').classList.toggle('active', all);
+  chipWrap.querySelectorAll('.chip[data-cls]').forEach(el=>{
+    el.classList.toggle('active', activeFilters.has(el.dataset.cls));
+  });
+}
+
+const listEl = document.getElementById('incidentList');
+function buildList(){
+  const filtered = INCIDENTS_CLEAN.filter(passesFilter).sort((a,b)=> a.date.localeCompare(b.date));
+  listEl.innerHTML = "";
+  document.getElementById('listCount').textContent = filtered.length + " entr" + (filtered.length===1?"y":"ies");
+  if(filtered.length===0){
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = "No incidents match these filters.";
+    listEl.appendChild(e);
+    return;
+  }
+  filtered.forEach(inc=>{
+    const row = document.createElement('div');
+    row.className = 'row' + (selectedIncident===inc ? ' selected':'');
+    const m = CLASS_META[inc.cls];
+    row.innerHTML = '<span class="sw" style="background:'+m.css+'"></span><div class="rt"><div class="nm">'+inc.name+'</div><div class="yr">'+incidentYear(inc)+' · '+m.label+'</div></div>';
+    row.onclick = ()=> selectIncident(inc, true);
+    listEl.appendChild(row);
+  });
+}
+
+function updateStats(){
+  document.getElementById('statTotal').textContent = INCIDENTS_CLEAN.length;
+  document.getElementById('statShown').textContent = INCIDENTS_CLEAN.filter(passesFilter).length;
+}
+const yearFromInput = document.getElementById('yearFrom');
+const yearToInput = document.getElementById('yearTo');
+yearFromInput.min = 1901; yearFromInput.max = 2026; yearFromInput.value = 1901;
+yearToInput.min = 1901; yearToInput.max = 2026; yearToInput.value = 2026;
+yearFrom = 1901;
+yearTo = 2026;
+
+function updateYearUI(){
+  document.getElementById('yearFromLbl').textContent = yearFrom;
+  document.getElementById('yearToLbl').textContent = yearTo;
+  const min=1901,max=2026;
+  const pctFrom = (yearFrom-min)/(max-min)*100;
+  const pctTo = (yearTo-min)/(max-min)*100;
+  const fill = document.getElementById('trackFill');
+  if(fill) {
+    fill.style.left = pctFrom+"%";
+    fill.style.width = (pctTo-pctFrom)+"%";
+  }
+}
+yearFromInput.addEventListener('input', ()=>{
+  yearFrom = Math.min(parseInt(yearFromInput.value,10), yearTo);
+  yearFromInput.value = yearFrom;
+  updateYearUI(); refreshUI(false);
+});
+yearToInput.addEventListener('input', ()=>{
+  yearTo = Math.max(parseInt(yearToInput.value,10), yearFrom);
+  yearToInput.value = yearTo;
+  updateYearUI(); refreshUI(false);
+});
+
+/* ============================= UI: TIMELINE SCRUBBER ============================= */
+const tlScrubber = document.getElementById('tlScrubber');
+const tlValue = document.getElementById('tlValue');
+const tlReset = document.getElementById('tlReset');
+
+tlScrubber.addEventListener('input', (e) => {
+  const y = parseInt(e.target.value, 10);
+  tlValue.textContent = y;
+  yearFrom = y;
+  yearTo = y;
+  yearFromInput.value = y;
+  yearToInput.value = y;
+  updateYearUI();
+  refreshUI(false);
+});
+
+tlReset.addEventListener('click', () => {
+  yearFrom = 1901;
+  yearTo = 2026;
+  yearFromInput.value = 1901;
+  yearToInput.value = 2026;
+  tlScrubber.value = 2026; 
+  tlValue.textContent = "All Years";
+  updateYearUI();
+  refreshUI(false);
+});
+
+/* ============================= UI: SEARCH ============================= */
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('input', (e)=>{
+  searchTerm = e.target.value.trim().toLowerCase();
+  
+  if (searchTerm.length >= 2) {
+    const filtered = INCIDENTS_CLEAN.filter(passesFilter);
+    if (filtered.length === 1 && selectedIncident !== filtered[0]) {
+      selectIncident(filtered[0], true);
+      return;
+    }
+  }
+  refreshUI(false);
+});
+
+searchInput.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter') {
+    searchTerm = e.target.value.trim().toLowerCase();
+    const filtered = INCIDENTS_CLEAN.filter(passesFilter);
+    if (filtered.length > 0 && selectedIncident !== filtered[0]) {
+      selectIncident(filtered[0], true);
+      e.target.blur();
+    }
+  }
+});
+
+/* ============================= UI: DETAIL PANEL ============================= */
+const detailEl = document.getElementById('detail');
+const overlayEl = document.getElementById('overlay');
+function openDetail(inc){
+  const m = CLASS_META[inc.cls];
+  document.getElementById('dBadge').style.color = m.css;
+  document.getElementById('dBadgeText').textContent = m.label;
+  document.getElementById('dName').textContent = inc.name;
+  document.getElementById('dSub').textContent = incidentYear(inc) + " · " + inc.sea;
+  document.getElementById('dDate').textContent = fmtDate(inc.date);
+  document.getElementById('dDeaths').textContent = fmtDeaths(inc.deaths);
+  document.getElementById('dCoords').textContent = fmtCoords(inc.lat, inc.lon);
+  document.getElementById('dSea').textContent = inc.sea;
+  document.getElementById('dDesc').textContent = inc.desc;
+  
+  const srcEl = document.getElementById('dSources');
+  srcEl.innerHTML = '';
+  if(inc.src && inc.src.length > 0){
+    inc.src.forEach(url => {
+      const a = document.createElement('a');
+      a.className = 'srcLink';
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      const wikiTitle = url.includes('wikipedia.org') ? 
+        'Wikipedia: ' + decodeURIComponent(url.split('/').pop().replace(/_/g,' ').replace(/\(.*\)/,'').trim()) :
+        url;
+      a.textContent = wikiTitle + ' →';
+      srcEl.appendChild(a);
+    });
+  }
+  
+  document.getElementById('dPrecision').textContent = inc.precision==='exact' 
+    ? '📍 Coordinates officially confirmed by maritime authorities.'
+    : '📍 Coordinates are approximate — placed at the reported regional position.';
+  
+  detailEl.classList.add('open');
+  overlayEl.classList.add('show');
+}
+function closeDetail(){
+  detailEl.classList.remove('open');
+  overlayEl.classList.remove('show');
+  selectedIncident = null;
+  if(targetSprite) targetSprite.visible = false;
+  buildList();
+}
+document.getElementById('detailClose').onclick = closeDetail;
+overlayEl.onclick = closeDetail;
+
+/* ============================= MOBILE SIDEBAR ============================= */
+const sidebarEl = document.getElementById('sidebar');
+document.getElementById('menuBtn').onclick = ()=> sidebarEl.classList.toggle('open');
+
+/* ============================= SIDEBAR COLLAPSE ============================= */
+const sidebarToggle = document.getElementById('sidebarToggle');
+let sidebarCollapsed = false;
+sidebarToggle.onclick = ()=> {
+  sidebarCollapsed = !sidebarCollapsed;
+  sidebarEl.classList.toggle('collapsed', sidebarCollapsed);
+  sidebarToggle.classList.toggle('collapsed', sidebarCollapsed);
+  sidebarToggle.textContent = sidebarCollapsed ? '▸' : '◂';
+  document.getElementById('legend').classList.toggle('sb-collapsed', sidebarCollapsed);
+  document.getElementById('footNote').classList.toggle('sb-collapsed', sidebarCollapsed);
+};
+
+/* ============================= FOOTNOTE DISMISS ============================= */
+document.getElementById('fnClose').onclick = ()=> document.getElementById('footNote').style.display='none';
+
+/* ============================= REFRESH ============================= */
+function refreshUI(rebuildChips){
+  if(selectedIncident && !passesFilter(selectedIncident)){
+    detailEl.classList.remove('open');
+    overlayEl.classList.remove('show');
+    selectedIncident = null;
+    if(targetSprite) targetSprite.visible = false;
+  }
+  if(rebuildChips !== false) syncChips();
+  buildList();
+  updateStats();
+  updateMarkerVisibility();
+}
+
+/* ============================================================================
+   THREE.JS GLOBE
+   ============================================================================ */
+let scene, camera, renderer, globeGroup, markerObjects = [];
+let dragging=false, lastX=0, lastY=0, velX=0, velY=0;
+let autoRotate = false;
+let raycaster, mouse;
+const canvas = document.getElementById('globeCanvas');
+
+function latLonToVector3(lat, lon, radius){
+  const phi = (90-lat) * Math.PI/180;
+  const theta = (lon+180) * Math.PI/180;
+  return new THREE.Vector3(
+    -radius*Math.sin(phi)*Math.cos(theta),
+    radius*Math.cos(phi),
+    radius*Math.sin(phi)*Math.sin(theta)
+  );
+}
+
+// High-quality SVG icons for each category
+const ICON_SVG = {
+  military: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M12 2L2 12h3v8h14v-8h3L12 2zM12 4.83L19.17 12h-2.26L12 7.08 7.09 12H4.83L12 4.83z" /></svg>', // Modern ship structure
+  ferry: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 11v-1.5c0-.83-.67-1.5-1.5-1.5.05-.22.1-.47.1-.73 0-1.42-1.36-2.61-3.07-2.74l-2.03-3.05c-.15-.22-.4-.36-.68-.4-.27-.04-.55.04-.76.22L9 4.3V3H6v1.94L3.84 6.78c-.26.22-.38.56-.3.89l.86 3.44C4.16 11.23 4 11.36 4 11.53c0 .17.06.33.17.44l.8 1.07.03.04L3.95 19z"/></svg>', // Cruise ship
+  submarine: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 13a4 4 0 00-4-4h-3V6h2V4h-6v5H5a4 4 0 000 8h15v-4zM7.5 15A1.5 1.5 0 119 13.5 1.5 1.5 0 017.5 15z"/></svg>', // Submarine
+  cargo: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 8h-3V4H7v4H4c-1.1 0-2 .9-2 2v10h20V10c0-1.1-.9-2-2-2zM9 6h6v2H9V6zm11 12H4v-8h16v8zM16 11H8v2h8v-2z"/></svg>', // Cargo
+  enviro: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>' // Hazard/Oil
+};
+
+// Category-specific ship icon textures
+const iconTextureCache = {};
+
+function makeShipIcon(cls, colorHex){
+  const key = cls + '_' + colorHex;
+  if(iconTextureCache[key]) return iconTextureCache[key];
+  
+  const sz = 128;
+  const c = document.createElement('canvas'); c.width=sz; c.height=sz;
+  const ctx = c.getContext('2d');
+  const col = '#'+colorHex.toString(16).padStart(6,'0');
+  
+  const tex = new THREE.CanvasTexture(c);
+  iconTextureCache[key] = tex;
+  
+  const img = new Image();
+  const svg = ICON_SVG[cls] ? ICON_SVG[cls].replace('{COLOR}', encodeURIComponent(col)) : ICON_SVG['cargo'].replace('{COLOR}', encodeURIComponent(col));
+  img.src = 'data:image/svg+xml;charset=utf-8,' + svg;
+  img.onload = () => {
+    // No glow effect
+    ctx.drawImage(img, 10, 10, 108, 108);
+    tex.needsUpdate = true;
+  };
+  
+  return tex;
+}
+
+// Target crosshair texture
+function makeTargetTexture(){
+  const c = document.createElement('canvas'); c.width=256; c.height=256;
+  const ctx = c.getContext('2d');
+  ctx.strokeStyle = '#ffffff';
+  
+  // Outer dashed ring
+  ctx.lineWidth = 4;
+  ctx.setLineDash([15, 10]);
+  ctx.beginPath(); ctx.arc(128,128,100,0,Math.PI*2); ctx.stroke();
+  
+  // Inner solid ring
+  ctx.setLineDash([]);
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(128,128,80,0,Math.PI*2); ctx.stroke();
+  
+  // Crosshairs
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(128, 0); ctx.lineTo(128, 50); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(128, 206); ctx.lineTo(128, 256); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, 128); ctx.lineTo(50, 128); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(206, 128); ctx.lineTo(256, 128); ctx.stroke();
+  
+  return new THREE.CanvasTexture(c);
+}
+let targetSprite;
+
+function initGlobe(){
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 13;
+
+  renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  // ── Realistic starfield ──
+  // Star glow texture (soft circular gradient)
+  function makeStarTexture(coreColor, glowColor){
+    const c = document.createElement('canvas'); c.width=64; c.height=64;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0, coreColor);
+    g.addColorStop(0.15, coreColor);
+    g.addColorStop(0.4, glowColor);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,64,64);
+    return new THREE.CanvasTexture(c);
+  }
+
+  const starTexWhite = makeStarTexture('rgba(255,255,255,1)','rgba(200,220,255,0.3)');
+  const starTexBlue  = makeStarTexture('rgba(180,210,255,1)','rgba(120,160,255,0.25)');
+  const starTexWarm  = makeStarTexture('rgba(255,230,190,1)','rgba(255,200,140,0.2)');
+
+  // Layer 1: Dense dim background stars (most numerous, tiny)
+  (function(){
+    const count = 4000;
+    const pos = new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      const r = 80+Math.random()*200;
+      const th = Math.random()*Math.PI*2;
+      const ph = Math.acos(2*Math.random()-1);
+      pos[i*3]   = r*Math.sin(ph)*Math.cos(th);
+      pos[i*3+1] = r*Math.sin(ph)*Math.sin(th);
+      pos[i*3+2] = r*Math.cos(ph);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      map:starTexWhite, size:0.3, transparent:true, opacity:0.4,
+      blending:THREE.AdditiveBlending, depthWrite:false
+    })));
+  })();
+
+  // Layer 2: Medium white/blue stars
+  (function(){
+    const count = 1500;
+    const pos = new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      const r = 70+Math.random()*180;
+      const th = Math.random()*Math.PI*2;
+      const ph = Math.acos(2*Math.random()-1);
+      pos[i*3]   = r*Math.sin(ph)*Math.cos(th);
+      pos[i*3+1] = r*Math.sin(ph)*Math.sin(th);
+      pos[i*3+2] = r*Math.cos(ph);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      map:starTexBlue, size:0.6, transparent:true, opacity:0.65,
+      blending:THREE.AdditiveBlending, depthWrite:false
+    })));
+  })();
+
+  // Layer 3: Bright prominent stars (sparse, large, mixed colors)
+  (function(){
+    const count = 350;
+    const pos = new Float32Array(count*3);
+    const colors = new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      const r = 65+Math.random()*160;
+      const th = Math.random()*Math.PI*2;
+      const ph = Math.acos(2*Math.random()-1);
+      pos[i*3]   = r*Math.sin(ph)*Math.cos(th);
+      pos[i*3+1] = r*Math.sin(ph)*Math.sin(th);
+      pos[i*3+2] = r*Math.cos(ph);
+      // Star color: 60% white, 25% blue-ish, 15% warm
+      const roll = Math.random();
+      if(roll<0.6)      { colors[i*3]=1;   colors[i*3+1]=1;   colors[i*3+2]=1;   }
+      else if(roll<0.85){ colors[i*3]=0.7;  colors[i*3+1]=0.82; colors[i*3+2]=1;  }
+      else              { colors[i*3]=1;    colors[i*3+1]=0.88; colors[i*3+2]=0.7; }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      map:starTexWhite, size:1.2, transparent:true, opacity:0.9,
+      vertexColors:true, blending:THREE.AdditiveBlending, depthWrite:false
+    })));
+  })();
+
+  // Layer 4: Rare extra-bright "beacon" stars
+  (function(){
+    const count = 60;
+    const pos = new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      const r = 70+Math.random()*140;
+      const th = Math.random()*Math.PI*2;
+      const ph = Math.acos(2*Math.random()-1);
+      pos[i*3]   = r*Math.sin(ph)*Math.cos(th);
+      pos[i*3+1] = r*Math.sin(ph)*Math.sin(th);
+      pos[i*3+2] = r*Math.cos(ph);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      map:starTexWarm, size:2.0, transparent:true, opacity:0.75,
+      blending:THREE.AdditiveBlending, depthWrite:false
+    })));
+  })();
+
+  // Milky Way nebula band (subtle glowing ring of soft light)
+  (function(){
+    const count = 2500;
+    const pos = new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      // Concentrate along a tilted plane to simulate the galactic band
+      const r = 90+Math.random()*130;
+      const th = Math.random()*Math.PI*2;
+      // Flatten distribution: mostly near the equatorial plane
+      const spread = 0.25 + Math.random()*0.3;
+      const ph = Math.PI/2 + (Math.random()-0.5)*spread;
+      // Rotate the band ~30 degrees
+      const x = r*Math.sin(ph)*Math.cos(th);
+      const y = r*Math.sin(ph)*Math.sin(th)*0.85 + r*Math.cos(ph)*0.52;
+      const z = r*Math.cos(ph)*0.85 - r*Math.sin(ph)*Math.sin(th)*0.52;
+      pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      map:starTexBlue, size:1.8, transparent:true, opacity:0.12,
+      color:0x667fa8, blending:THREE.AdditiveBlending, depthWrite:false
+    })));
+  })();
+
+  globeGroup = new THREE.Group();
+  scene.add(globeGroup);
+
+  // base sphere — fully OPAQUE so you cannot see through
+  const geo = new THREE.SphereGeometry(RADIUS, 64, 64);
+  const fallbackMat = new THREE.MeshPhongMaterial({color:0x0a1e2e, emissive:0x050e18, shininess:8, transparent:false});
+  const globeMesh = new THREE.Mesh(geo, fallbackMat);
+  globeGroup.add(globeMesh);
+
+  // lat/long grid overlay
+  const gridGroup = new THREE.Group();
+  const gridMat = new THREE.LineBasicMaterial({color:0x1e3a4d, transparent:true, opacity:0.45});
+  for(let lat=-60; lat<=60; lat+=30){
+    const pts=[];
+    for(let lon=-180; lon<=180; lon+=4){ pts.push(latLonToVector3(lat,lon,RADIUS*1.001)); }
+    gridGroup.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), gridMat));
+  }
+  for(let lon=-180; lon<180; lon+=30){
+    const pts=[];
+    for(let lat=-90; lat<=90; lat+=4){ pts.push(latLonToVector3(lat,lon,RADIUS*1.001)); }
+    gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat));
+  }
+  globeGroup.add(gridGroup);
+
+  // atmosphere glow
+  const glowGeo = new THREE.SphereGeometry(RADIUS*1.04, 48, 48);
+  const glowMat = new THREE.MeshBasicMaterial({color:0x2dd4bf, transparent:true, opacity:0.06, side:THREE.BackSide});
+  globeGroup.add(new THREE.Mesh(glowGeo, glowMat));
+
+  // lights
+  scene.add(new THREE.AmbientLight(0x8fb3c9, 0.9));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.6);
+  dl.position.set(5,3,8);
+  scene.add(dl);
+
+  // Load earth texture
+  const loader = new THREE.TextureLoader();
+  loader.crossOrigin = 'anonymous';
+  loader.load(
+    'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
+    (tex)=>{ globeMesh.material = new THREE.MeshPhongMaterial({map:tex, shininess:8, transparent:false}); },
+    undefined,
+    ()=>{}
+  );
+
+  // Create incident markers — category-specific ship icons
+  INCIDENTS_CLEAN.forEach(inc=>{
+    const m = CLASS_META[inc.cls];
+    const pos = latLonToVector3(inc.lat, inc.lon, RADIUS*1.035);
+    const tex = makeShipIcon(inc.cls, m.color);
+    const mat = new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:true, depthWrite:false, sizeAttenuation:true});
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.copy(pos);
+    sprite.scale.set(0.24, 0.24, 1);
+    sprite.userData = {incident:inc, baseScale:0.24};
+    globeGroup.add(sprite);
+    markerObjects.push(sprite);
+  });
+
+  // Create target crosshair
+  const tmMat = new THREE.SpriteMaterial({map:makeTargetTexture(), transparent:true, depthTest:false, depthWrite:false, blending:THREE.AdditiveBlending});
+  targetSprite = new THREE.Sprite(tmMat);
+  targetSprite.visible = false;
+  globeGroup.add(targetSprite);
+
+  // raycaster
+  raycaster = new THREE.Raycaster();
+  raycaster.params.Sprite = {threshold:0};
+  mouse = new THREE.Vector2();
+
+  // Events
+  canvas.addEventListener('pointerdown', onDown);
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('wheel', onWheel, {passive:false});
+  canvas.addEventListener('dblclick', ()=>{ camera.position.z=13; globeGroup.rotation.x=0.3; globeGroup.rotation.y=0; });
+  window.addEventListener('resize', onResize);
+
+  // zoom buttons
+  document.getElementById('zoomInBtn').onclick = ()=>{ camera.position.z = Math.max(camera.position.z-1, 6.5); };
+  document.getElementById('zoomOutBtn').onclick = ()=>{ camera.position.z = Math.min(camera.position.z+1, 25); };
+  document.getElementById('resetBtn').onclick = ()=>{ camera.position.z=13; globeGroup.rotation.x=0.3; globeGroup.rotation.y=0; };
+  document.getElementById('autoRotateBtn').onclick = function(){ autoRotate=!autoRotate; this.classList.toggle('on',autoRotate); };
+
+  globeGroup.rotation.x = 0.3;
+  animate();
+  
+  // Hide loader
+  setTimeout(()=> document.getElementById('loader').classList.add('hide'), 1200);
+}
+
+let hoveredSprite = null;
+const tooltip = document.getElementById('tooltip');
+
+function onDown(e){
+  dragging=true;
+  lastX=e.clientX;
+  lastY=e.clientY;
+  velX=0; velY=0;
+  canvas.classList.add('dragging');
+}
+function onMove(e){
+  if(dragging){
+    const dx=e.clientX-lastX, dy=e.clientY-lastY;
+    globeGroup.rotation.y += dx*0.005;
+    globeGroup.rotation.x += dy*0.005;
+    globeGroup.rotation.x = Math.max(-1.2, Math.min(1.2, globeGroup.rotation.x));
+    velX=dx*0.005; velY=dy*0.005;
+    lastX=e.clientX; lastY=e.clientY;
+    return;
+  }
+  // hover detection
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width)*2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height)*2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  
+  const visibleMarkers = markerObjects.filter(s => s.visible);
+  const intersects = raycaster.intersectObjects(visibleMarkers);
+  
+  if(intersects.length > 0){
+    const spr = intersects[0].object;
+    if(hoveredSprite !== spr){
+      if(hoveredSprite) hoveredSprite.scale.set(hoveredSprite.userData.baseScale, hoveredSprite.userData.baseScale, 1);
+      hoveredSprite = spr;
+      hoveredSprite.scale.set(0.34, 0.34, 1);
+      canvas.style.cursor = 'pointer';
+      // show tooltip
+      const inc = spr.userData.incident;
+      document.getElementById('ttName').textContent = inc.name;
+      document.getElementById('ttYear').textContent = incidentYear(inc) + ' · ' + CLASS_META[inc.cls].label;
+      tooltip.classList.add('show');
+    }
+    tooltip.style.left = e.clientX + 'px';
+    tooltip.style.top = e.clientY + 'px';
+  } else {
+    if(hoveredSprite){
+      hoveredSprite.scale.set(hoveredSprite.userData.baseScale, hoveredSprite.userData.baseScale, 1);
+      hoveredSprite = null;
+      canvas.style.cursor = 'grab';
+      tooltip.classList.remove('show');
+    }
+  }
+}
+function onUp(e){
+  canvas.classList.remove('dragging');
+  if(dragging && Math.abs(e.clientX-lastX)<3 && Math.abs(e.clientY-lastY)<3){
+    // Click detection
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width)*2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height)*2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const visibleMarkers = markerObjects.filter(s => s.visible);
+    const intersects = raycaster.intersectObjects(visibleMarkers);
+    if(intersects.length > 0){
+      const inc = intersects[0].object.userData.incident;
+      selectIncident(inc, false);
+    }
+  }
+  dragging=false;
+}
+function onWheel(e){
+  e.preventDefault();
+  camera.position.z += e.deltaY*0.01;
+  camera.position.z = Math.max(6.5, Math.min(25, camera.position.z));
+}
+function onResize(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function selectIncident(inc, flyTo){
+  selectedIncident = inc;
+  tooltip.classList.remove('show');
+  
+  if(inc){
+    targetSprite.position.copy(latLonToVector3(inc.lat, inc.lon, RADIUS*1.045));
+    targetSprite.material.color.setHex(CLASS_META[inc.cls].color);
+    targetSprite.visible = true;
+  }
+  
+  openDetail(inc);
+  buildList();
+  if(flyTo){
+    // Calculate precise target rotation, offset slightly to account for the right-hand panel
+    let targetY = -(inc.lon + 90) * (Math.PI / 180) - 0.35;
+    const targetX = inc.lat * (Math.PI / 180);
+    
+    // Choose the shortest rotation path
+    let dy = (targetY - globeGroup.rotation.y) % (Math.PI * 2);
+    if (dy > Math.PI) dy -= Math.PI * 2;
+    if (dy < -Math.PI) dy += Math.PI * 2;
+    targetY = globeGroup.rotation.y + dy;
+    
+    animateRotation(targetX, targetY);
+  }
+}
+
+function animateRotation(tx, ty){
+  const startX = globeGroup.rotation.x;
+  const startY = globeGroup.rotation.y;
+  const duration = 800;
+  const startTime = Date.now();
+  function step(){
+    const elapsed = Date.now()-startTime;
+    const t = Math.min(elapsed/duration, 1);
+    const ease = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+    globeGroup.rotation.x = startX + (tx-startX)*ease;
+    globeGroup.rotation.y = startY + (ty-startY)*ease;
+    if(t<1) requestAnimationFrame(step);
+  }
+  step();
+}
+
+function updateMarkerVisibility(){
+  markerObjects.forEach(spr=>{
+    spr.visible = passesFilter(spr.userData.incident);
+  });
+}
+
+let pulseTime = 0;
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRotate && !dragging) globeGroup.rotation.y += 0.0015;
+  if(!dragging){
+    velX *= 0.95;
+    velY *= 0.95;
+    globeGroup.rotation.y += velX;
+    globeGroup.rotation.x += velY;
+  }
+  // Pulse markers
+  pulseTime += 0.03;
+  
+  if(targetSprite && targetSprite.visible){
+    targetSprite.material.rotation -= 0.02; // spin
+    const ts = 0.45 + 0.05*Math.sin(pulseTime*3);
+    targetSprite.scale.set(ts, ts, 1);
+  }
+  
+  markerObjects.forEach(spr=>{
+    if(spr.visible && spr.userData.incident === selectedIncident){
+      const s = spr.userData.baseScale * (1 + 0.2*Math.sin(pulseTime*2));
+      spr.scale.set(s, s, 1);
+    } else {
+      spr.scale.set(spr.userData.baseScale, spr.userData.baseScale, 1);
+    }
+  });
+  renderer.render(scene, camera);
+}
+
+/* ============================= BOOT ============================= */
+function boot(){
+  buildChips();
+  updateYearUI();
+  refreshUI();
+  initGlobe();
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(boot, 100); });
+} else {
+  setTimeout(boot, 100);
+}
+
+})();
