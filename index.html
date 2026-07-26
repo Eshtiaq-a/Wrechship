@@ -5547,7 +5547,18 @@
         if (targetSprite) targetSprite.visible = false;
         buildList();
         if (typeof animateRotation === 'function') {
-          animateRotation(preFlyRotationX, preFlyRotationY, preFlyZoom);
+          // Zoom out smoothly back to exploration zoom but keep current globe rotation
+          animateRotation(globeGroup.rotation.x, globeGroup.rotation.y, preFlyZoom);
+        }
+        // Restore auto-rotate state after the zoom-out animation completes
+        if (preFlyAutoRotate) {
+          setTimeout(() => {
+            if (!selectedIncident) {
+              autoRotate = true;
+              const btn = document.getElementById('autoRotateBtn');
+              if (btn) btn.classList.add('on');
+            }
+          }, 950);
         }
       }
       document.getElementById('detailClose').onclick = closeDetail;
@@ -5615,6 +5626,7 @@
       let preFlyRotationX = 0.3;
       let preFlyRotationY = 0;
       let preFlyZoom = 13;
+      let preFlyAutoRotate = true;
       let autoRotate = true;
       let raycaster, mouse;
       const canvas = document.getElementById('globeCanvas');
@@ -6354,14 +6366,14 @@
         openDetail(inc);
         buildList();
         if (flyTo && inc) {
-          stopAutoRotate();
-
           // Only store the exploration position if we aren't already viewing a detail panel
           if (typeof detailEl !== 'undefined' && detailEl && !detailEl.classList.contains('open')) {
             preFlyRotationX = globeGroup.rotation.x;
             preFlyRotationY = globeGroup.rotation.y;
             preFlyZoom = camera.position.z;
+            preFlyAutoRotate = autoRotate;
           }
+          stopAutoRotate();
 
           // Calculate exact target rotation centering directly on (lat, lon) with 100% precision
           let targetY = -(inc.lon + 90) * (Math.PI / 180);
