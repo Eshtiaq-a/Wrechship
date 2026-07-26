@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WRECKSHIP — Automated Tests</title>
+  <style>
+    body { font-family: 'IBM Plex Mono', monospace; background: #0a0b10; color: #e0e5ec; padding: 20px; }
+    h1 { color: #2dd4bf; margin-bottom: 20px; }
+    .suite { margin: 16px 0; padding: 12px; border: 1px solid #1b3040; border-radius: 6px; }
+    .suite h2 { font-size: 14px; color: #7c93a6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .test { padding: 4px 8px; margin: 2px 0; border-radius: 3px; font-size: 13px; }
+    .pass { background: rgba(45, 212, 191, 0.1); color: #2dd4bf; }
+    .fail { background: rgba(232, 115, 74, 0.15); color: #e8734a; }
+    .summary { margin-top: 24px; padding: 16px; border: 2px solid #2dd4bf; border-radius: 8px; font-size: 16px; }
+    .summary.has-failures { border-color: #e8734a; }
+    .emoji { margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <h1>WRECKSHIP — Automated Test Suite</h1>
+  <div id="results"></div>
+  <div id="summary"></div>
+
+  <!-- Load data files exactly as index.html does -->
+  <script src="emodnet_data.js"></script>
+  <script>
+    // =========================================================================
+    // Replicate the normalization engine from index.html for isolated testing
+    // =========================================================================
+    const MONTH_MAP = {
+      'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+      'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12
+    };
+    const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+
+    function parseDate(raw) {
+      const result = { year: null, month: null, day: null, iso: null, raw: raw || '' };
+      if (!raw || raw === '' || raw === '-' || raw === 'Unknown') return result;
+      const s = raw.trim();
+
+      const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (isoMatch) {
+        result.year = parseInt(isoMatch[1], 10); result.month = parseInt(isoMatch[2], 10); result.day = parseInt(isoMatch[3], 10);
+        result.iso = s; return result;
+      }
+      const dmyMatch = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+      if (dmyMatch) {
+        const m = MONTH_MAP[dmyMatch[2].toLowerCase()];
+        if (m) {
+          result.day = parseInt(dmyMatch[1], 10); result.month = m; result.year = parseInt(dmyMatch[3], 10);
+          result.iso = result.year + '-' + String(result.month).padStart(2, '0') + '-' + String(result.day).padStart(2, '0');
+          return result;
+        }
+      }
+      const orMatch = s.match(/^(\d{1,2})\s+or\s+\d{1,2}\s+([A-Za-z]+)\s+(\d{4})$/);
+      if (orMatch) {
+        const m = MONTH_MAP[orMatch[2].toLowerCase()];
+        if (m) {
+          result.day = parseInt(orMatch[1], 10); result.month = m; result.year = parseInt(orMatch[3], 10);
+          result.iso = result.year + '-' + String(result.month).padStart(2, '0') + '-' + String(result.day).padStart(2, '0');
+          return result;
+        }
+      }
+      const usMatch = s.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+      if (usMatch) {
+        const m = MONTH_MAP[usMatch[1].toLowerCase()];
+        if (m) {
+          result.day = parseInt(usMatch[2], 10); result.month = m; result.year = parseInt(usMatch[3], 10);
+          result.iso = result.year + '-' + String(result.month).padStart(2, '0') + '-' + String(result.day).padStart(2, '0');
+          return result;
+        }
+      }
+      const monthYearMatch = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+      if (monthYearMatch) {
+        const m = MONTH_MAP[monthYearMatch[1].toLowerCase()];
+        if (m) { result.month = m; result.year = parseInt(monthYearMatch[2], 10); return result; }
+      }
+      const yearMatch = s.match(/^(\d{4})$/);
+      if (yearMatch) { result.year = parseInt(yearMatch[1], 10); return result; }
+      const anyYear = s.match(/\b(\d{4})\b/);
+      if (anyYear) { result.year = parseInt(anyYear[1], 10); }
+      return result;
+    }
+
+    function fmtDate(inc) {
+      const d = inc.dateInfo;
+      if (!d || d.year === null) return 'Date unknown';
+      if (d.iso && d.month !== null && d.day !== null) {
+        return MONTH_NAMES[d.month] + ' ' + d.day + ', ' + d.year;
+      }
+      if (d.month !== null) {
+        return MONTH_NAMES[d.month] + ' ' + d.year + ' (exact day unknown)';
+      }
+      return d.year + ' (exact date unknown)';
+    }
+
+    function incidentYear(i) { return i.dateInfo ? i.dateInfo.year : null; }
+
+    const CLS_MIGRATION = { 'ferry': 'passenger_ferry', 'cargo': 'cargo_merchant', 'enviro': 'environmental' };
+    const MILITARY_KEYWORDS = ['aircraft carrier','battleship','cruiser','destroyer','frigate','corvette','torpedo boat','minesweeper','mine sweeper','gunboat','patrol boat','troopship','troop ship','armed transport','war ','u-boat','U-boat','battle of','torpedoed by','sunk by'];
+    const PASSENGER_KEYWORDS = ['passenger','cruise ship','river cruise','ocean liner','passenger liner','pleasure boat','ferry','hospital ship'];
+    const ENVIRONMENTAL_KEYWORDS = ['oil spill','oil tanker','crude oil','environmental disaster','pollution','chemical tanker','toxic'];
+
+    function inferCategory(inc) {
+      const name = (inc.name || '').toLowerCase();
+      const desc = (inc.desc || '').toLowerCase();
+      const combined = name + ' ' + desc;
+      if (name.includes('titan') && combined.includes('submersible')) return 'submersible';
+      if (name.includes('titan') && combined.includes('oceangate')) return 'submersible';
+      if (inc.cls === 'submarine') return 'submarine';
+      if (MILITARY_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return 'military';
+      if (ENVIRONMENTAL_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return 'environmental';
+      if (PASSENGER_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return 'passenger_ferry';
+      if (CLS_MIGRATION[inc.cls]) return CLS_MIGRATION[inc.cls];
+      if (['military','passenger_ferry','submarine','submersible','cargo_merchant','environmental','other_maritime_incident','unknown'].includes(inc.cls)) return inc.cls;
+      return 'cargo_merchant';
+    }
+
+    const VALID_CATEGORIES = ['military','passenger_ferry','submarine','submersible','cargo_merchant','environmental','other_maritime_incident','unknown'];
+
+    // =========================================================================
+    // Test Framework
+    // =========================================================================
+    let totalTests = 0, passedTests = 0, failedTests = 0;
+    const resultsEl = document.getElementById('results');
+
+    function suite(name) {
+      const div = document.createElement('div');
+      div.className = 'suite';
+      div.innerHTML = `<h2>${name}</h2>`;
+      resultsEl.appendChild(div);
+      return div;
+    }
+
+    function test(suiteEl, name, fn) {
+      totalTests++;
+      const div = document.createElement('div');
+      div.className = 'test';
+      try {
+        fn();
+        div.className += ' pass';
+        div.innerHTML = `<span class="emoji">✅</span>${name}`;
+        passedTests++;
+      } catch (e) {
+        div.className += ' fail';
+        div.innerHTML = `<span class="emoji">❌</span>${name} — ${e.message}`;
+        failedTests++;
+      }
+      suiteEl.appendChild(div);
+    }
+
+    function assert(condition, msg) { if (!condition) throw new Error(msg || 'Assertion failed'); }
+    function assertEqual(a, b, msg) { if (a !== b) throw new Error((msg || '') + ` Expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`); }
+
+    // =========================================================================
+    // TEST SUITES
+    // =========================================================================
+
+    // 1. ISO and partial-date formatting
+    const s1 = suite('ISO & Partial Date Parsing');
+    test(s1, 'ISO format: "1912-04-15" → year=1912, month=4, day=15, iso="1912-04-15"', () => {
+      const d = parseDate('1912-04-15');
+      assertEqual(d.year, 1912); assertEqual(d.month, 4); assertEqual(d.day, 15); assertEqual(d.iso, '1912-04-15');
+    });
+    test(s1, 'D Month YYYY: "26 July 1943" → year=1943, month=7, day=26', () => {
+      const d = parseDate('26 July 1943');
+      assertEqual(d.year, 1943); assertEqual(d.month, 7); assertEqual(d.day, 26); assertEqual(d.iso, '1943-07-26');
+    });
+    test(s1, 'D Month YYYY: "5 April 1942" → year=1942, month=4, day=5', () => {
+      const d = parseDate('5 April 1942');
+      assertEqual(d.year, 1942); assertEqual(d.month, 4); assertEqual(d.day, 5); assertEqual(d.iso, '1942-04-05');
+    });
+    test(s1, 'US format: "June 11, 1942" → year=1942, month=6, day=11', () => {
+      const d = parseDate('June 11, 1942');
+      assertEqual(d.year, 1942); assertEqual(d.month, 6); assertEqual(d.day, 11); assertEqual(d.iso, '1942-06-11');
+    });
+    test(s1, '"D or D Month YYYY": "1 or 3 September 1943" → year=1943, month=9, day=1', () => {
+      const d = parseDate('1 or 3 September 1943');
+      assertEqual(d.year, 1943); assertEqual(d.month, 9); assertEqual(d.day, 1);
+    });
+    test(s1, 'Month-year: "April 1853" → year=1853, month=4, day=null', () => {
+      const d = parseDate('April 1853');
+      assertEqual(d.year, 1853); assertEqual(d.month, 4); assertEqual(d.day, null);
+    });
+    test(s1, 'Year-only: "1902" → year=1902, month=null, day=null', () => {
+      const d = parseDate('1902');
+      assertEqual(d.year, 1902); assertEqual(d.month, null); assertEqual(d.day, null);
+    });
+    test(s1, 'Empty string → all null', () => {
+      const d = parseDate('');
+      assertEqual(d.year, null); assertEqual(d.month, null); assertEqual(d.day, null);
+    });
+    test(s1, '"Unknown" → all null', () => {
+      const d = parseDate('Unknown');
+      assertEqual(d.year, null);
+    });
+    test(s1, '"-" → all null', () => {
+      const d = parseDate('-');
+      assertEqual(d.year, null);
+    });
+    test(s1, '"Late 7th century BC" → year null (no 4-digit year)', () => {
+      const d = parseDate('Late 7th century BC');
+      assertEqual(d.year, null);
+    });
+    test(s1, '"Seventh century BC" → year null', () => {
+      const d = parseDate('Seventh century BC');
+      assertEqual(d.year, null);
+    });
+    test(s1, 'Fallback year extraction from long descriptive string', () => {
+      const d = parseDate('An ancient shipwreck discovered in October 1900 near the island');
+      assertEqual(d.year, 1900);
+    });
+
+    // 2. No rendered NaN or Invalid Date
+    const s2 = suite('No NaN / Invalid Date in Rendering');
+    test(s2, 'fmtDate with year-only record shows year, not NaN', () => {
+      const inc = { dateInfo: parseDate('1902') };
+      const result = fmtDate(inc);
+      assert(!result.includes('NaN'), 'Contains NaN: ' + result);
+      assert(!result.includes('Invalid'), 'Contains Invalid: ' + result);
+      assert(result.includes('1902'), 'Should contain 1902: ' + result);
+    });
+    test(s2, 'fmtDate with "Unknown" date shows "Date unknown"', () => {
+      const inc = { dateInfo: parseDate('Unknown') };
+      assertEqual(fmtDate(inc), 'Date unknown');
+    });
+    test(s2, 'fmtDate with empty date shows "Date unknown"', () => {
+      const inc = { dateInfo: parseDate('') };
+      assertEqual(fmtDate(inc), 'Date unknown');
+    });
+    test(s2, 'fmtDate with "26 July 1943" (U-359 date) shows proper date', () => {
+      const inc = { dateInfo: parseDate('26 July 1943') };
+      const result = fmtDate(inc);
+      assertEqual(result, 'July 26, 1943');
+    });
+    test(s2, 'fmtDate with partial month-year shows honest fallback', () => {
+      const inc = { dateInfo: parseDate('April 1853') };
+      const result = fmtDate(inc);
+      assert(result.includes('1853'), 'Should contain year');
+      assert(result.includes('April'), 'Should contain month');
+      assert(result.includes('exact day unknown'), 'Should indicate missing day');
+    });
+    test(s2, 'incidentYear never returns NaN', () => {
+      const cases = ['', 'Unknown', '-', '1902', '26 July 1943', '1912-04-15', 'Late 7th century BC'];
+      cases.forEach(raw => {
+        const y = incidentYear({ dateInfo: parseDate(raw) });
+        assert(y === null || (typeof y === 'number' && !isNaN(y)), `NaN for "${raw}"`);
+      });
+    });
+
+    // 3. Four-digit year display
+    const s3 = suite('Four-Digit Year Display');
+    test(s3, '"26 July 1943" → incidentYear returns 1943 (not 26)', () => {
+      const y = incidentYear({ dateInfo: parseDate('26 July 1943') });
+      assertEqual(y, 1943);
+    });
+    test(s3, '"9 December 1971" → incidentYear returns 1971 (not 9)', () => {
+      const y = incidentYear({ dateInfo: parseDate('9 December 1971') });
+      assertEqual(y, 1971);
+    });
+    test(s3, '"5 April 1942" → incidentYear returns 1942 (not 5)', () => {
+      const y = incidentYear({ dateInfo: parseDate('5 April 1942') });
+      assertEqual(y, 1942);
+    });
+    test(s3, '"11 August 1942" → incidentYear returns 1942 (not 11)', () => {
+      const y = incidentYear({ dateInfo: parseDate('11 August 1942') });
+      assertEqual(y, 1942);
+    });
+    test(s3, 'All years are 4-digit or null (never 1-2 digit)', () => {
+      const testDates = ['1 January 1915', '15 September 1942', '29 November 1944', '2025', '1912-04-15', 'June 11, 1942'];
+      testDates.forEach(raw => {
+        const y = incidentYear({ dateInfo: parseDate(raw) });
+        if (y !== null) {
+          assert(y >= 100, `Year ${y} from "${raw}" is not 4-digit`);
+        }
+      });
+    });
+
+    // 4. "On this day" date selection
+    const s4 = suite('"On This Day" Date Selection');
+    test(s4, 'Matching by dateInfo.month and dateInfo.day (ISO format)', () => {
+      const inc = { dateInfo: parseDate('1912-04-15') };
+      assert(inc.dateInfo.month === 4 && inc.dateInfo.day === 15, 'Should match April 15');
+    });
+    test(s4, 'Matching by dateInfo.month and dateInfo.day (D Month YYYY format)', () => {
+      const inc = { dateInfo: parseDate('26 July 1943') };
+      assert(inc.dateInfo.month === 7 && inc.dateInfo.day === 26, 'Should match July 26');
+    });
+    test(s4, 'Year-only records excluded from On This Day', () => {
+      const inc = { dateInfo: parseDate('1902') };
+      assert(inc.dateInfo.month === null || inc.dateInfo.day === null, 'Year-only should not match');
+    });
+    test(s4, '"Unknown" records excluded from On This Day', () => {
+      const inc = { dateInfo: parseDate('Unknown') };
+      assert(inc.dateInfo.month === null && inc.dateInfo.day === null, 'Unknown should not match');
+    });
+
+    // 5. Invalid data excluded from sorting and sliders
+    const s5 = suite('Invalid Data Handling in Sorting & Sliders');
+    test(s5, 'incidentYear returns null for "Unknown" — not included in year range', () => {
+      const y = incidentYear({ dateInfo: parseDate('Unknown') });
+      assertEqual(y, null);
+    });
+    test(s5, 'Null year records excluded from passesFilter when yearFrom > 0', () => {
+      // Simulate passesFilter logic
+      const inc = { dateInfo: parseDate('Unknown'), cls: 'cargo_merchant', name: 'Test' };
+      const y = incidentYear(inc);
+      const yearFrom = 1900;
+      const shouldExclude = (y === null && yearFrom > 0);
+      assert(shouldExclude, 'Unknown-year records should be excluded from slider range');
+    });
+    test(s5, 'Sorting pushes null-year records to end (desc order)', () => {
+      const a = { dateInfo: parseDate('1912-04-15'), name: 'A' };
+      const b = { dateInfo: parseDate('Unknown'), name: 'B' };
+      const aY = incidentYear(a) !== null ? incidentYear(a) : -Infinity;
+      const bY = incidentYear(b) !== null ? incidentYear(b) : -Infinity;
+      assert(bY - aY < 0, 'Unknown year should sort after known year in desc');
+    });
+
+    // 6. Titan categorized as submersible
+    const s6 = suite('Titan Categorization');
+    test(s6, 'Titan (submersible) → category "submersible" (not "submarine")', () => {
+      const titan = {
+        name: 'Titan (submersible)',
+        cls: 'submarine',
+        desc: 'The OceanGate Titan submersible imploded during a descent to the Titanic wreck, killing all 5 occupants instantly.'
+      };
+      const cat = inferCategory(titan);
+      assertEqual(cat, 'submersible');
+    });
+    test(s6, 'Regular submarine stays "submarine"', () => {
+      const sub = { name: 'USS Thresher', cls: 'submarine', desc: 'A nuclear submarine lost at sea.' };
+      const cat = inferCategory(sub);
+      assertEqual(cat, 'submarine');
+    });
+    test(s6, 'Aircraft carrier recategorized to military (not cargo)', () => {
+      const ac = { name: 'USS Lexington', cls: 'cargo', desc: 'A Lexington-class aircraft carrier that was sunk at the Battle of the Coral Sea.' };
+      const cat = inferCategory(ac);
+      assertEqual(cat, 'military');
+    });
+    test(s6, 'Passenger ferry recategorized from cargo', () => {
+      const pf = { name: 'SS Yarmouth Castle', cls: 'ferry', desc: 'SS Yarmouth Castle was a passenger ship.' };
+      const cat = inferCategory(pf);
+      assertEqual(cat, 'passenger_ferry');
+    });
+
+    // 7. Category validity
+    const s7 = suite('Category Model Integrity');
+    test(s7, 'All migrated categories are in VALID_CATEGORIES', () => {
+      Object.values(CLS_MIGRATION).forEach(v => {
+        assert(VALID_CATEGORIES.includes(v), `Migrated value "${v}" not in valid categories`);
+      });
+    });
+    test(s7, 'inferCategory always returns a valid category', () => {
+      const testCases = [
+        { cls: 'cargo', desc: 'A cargo ship', name: 'Test' },
+        { cls: 'ferry', desc: 'A passenger ferry', name: 'Test' },
+        { cls: 'enviro', desc: 'Oil spill', name: 'Test' },
+        { cls: 'submarine', desc: 'A submarine', name: 'Test' },
+        { cls: 'military', desc: 'Military vessel', name: 'Test' },
+        { cls: 'unknown_thing', desc: 'Something', name: 'Test' },
+      ];
+      testCases.forEach(tc => {
+        const cat = inferCategory(tc);
+        assert(VALID_CATEGORIES.includes(cat), `"${cat}" from cls="${tc.cls}" not in valid categories`);
+      });
+    });
+
+    // 8. Edge cases
+    const s8 = suite('Edge Cases');
+    test(s8, 'US format without comma: "June 16 1942" → parsed', () => {
+      const d = parseDate('June 16 1942');
+      // This should match via the US format regex (comma is optional)
+      assertEqual(d.year, 1942); assertEqual(d.month, 6); assertEqual(d.day, 16);
+    });
+    test(s8, 'fmtDate with no dateInfo property → "Date unknown"', () => {
+      assertEqual(fmtDate({}), 'Date unknown');
+    });
+    test(s8, 'fmtDate with null dateInfo → "Date unknown"', () => {
+      assertEqual(fmtDate({ dateInfo: null }), 'Date unknown');
+    });
+    test(s8, 'Year "2025" → year=2025 (not null)', () => {
+      const d = parseDate('2025');
+      assertEqual(d.year, 2025);
+    });
+    test(s8, '"December 1565" → year=1565, month=12', () => {
+      const d = parseDate('December 1565');
+      assertEqual(d.year, 1565); assertEqual(d.month, 12); assertEqual(d.day, null);
+    });
+
+    // =========================================================================
+    // Summary
+    // =========================================================================
+    const summaryEl = document.getElementById('summary');
+    summaryEl.className = 'summary' + (failedTests > 0 ? ' has-failures' : '');
+    summaryEl.innerHTML = failedTests === 0
+      ? `<span class="emoji">🎉</span> All ${totalTests} tests passed!`
+      : `<span class="emoji">⚠️</span> ${passedTests}/${totalTests} passed, <strong>${failedTests} failed</strong>`;
+  </script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WRECKSHIP — Data Validation Report</title>
+  <style>
+    body { font-family: 'IBM Plex Mono', monospace; background: #0a0b10; color: #e0e5ec; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    h1 { color: #2dd4bf; margin-bottom: 8px; }
+    h2 { color: #e8734a; margin: 24px 0 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #1b3040; padding-bottom: 6px; }
+    .stat { display: inline-block; margin: 4px 12px 4px 0; padding: 6px 12px; background: #0d1826; border: 1px solid #1b3040; border-radius: 4px; font-size: 13px; }
+    .stat .n { color: #2dd4bf; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+    th { background: #0d1826; color: #7c93a6; text-align: left; padding: 6px 8px; border: 1px solid #1b3040; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; position: sticky; top: 0; }
+    td { padding: 4px 8px; border: 1px solid #1b3040; vertical-align: top; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    tr:hover td { background: rgba(45, 212, 191, 0.05); }
+    .warn { color: #e3b23c; }
+    .err { color: #e8734a; }
+    .ok { color: #2dd4bf; }
+    .section { margin: 16px 0; padding: 12px; border: 1px solid #1b3040; border-radius: 6px; }
+    #loading { color: #7c93a6; font-style: italic; }
+    .count-badge { background: #e8734a; color: #0a0b10; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+    .count-badge.ok-badge { background: #2dd4bf; }
+  </style>
+</head>
+<body>
+  <h1>WRECKSHIP — Data Validation Report</h1>
+  <p id="loading">Analyzing data...</p>
+  <div id="overview"></div>
+  <div id="results"></div>
+
+  <script src="emodnet_data.js"></script>
+  <script>
+    // =========================================================================
+    // Replicate parseDate from index.html
+    // =========================================================================
+    const MONTH_MAP = {
+      'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+      'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12
+    };
+
+    function parseDate(raw) {
+      const result = { year: null, month: null, day: null, iso: null, raw: raw || '' };
+      if (!raw || raw === '' || raw === '-' || raw === 'Unknown') return result;
+      const s = raw.trim();
+      const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (isoMatch) { result.year = parseInt(isoMatch[1], 10); result.month = parseInt(isoMatch[2], 10); result.day = parseInt(isoMatch[3], 10); result.iso = s; return result; }
+      const dmyMatch = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+      if (dmyMatch) { const m = MONTH_MAP[dmyMatch[2].toLowerCase()]; if (m) { result.day = parseInt(dmyMatch[1], 10); result.month = m; result.year = parseInt(dmyMatch[3], 10); result.iso = result.year+'-'+String(result.month).padStart(2,'0')+'-'+String(result.day).padStart(2,'0'); return result; } }
+      const orMatch = s.match(/^(\d{1,2})\s+or\s+\d{1,2}\s+([A-Za-z]+)\s+(\d{4})$/);
+      if (orMatch) { const m = MONTH_MAP[orMatch[2].toLowerCase()]; if (m) { result.day = parseInt(orMatch[1], 10); result.month = m; result.year = parseInt(orMatch[3], 10); result.iso = result.year+'-'+String(result.month).padStart(2,'0')+'-'+String(result.day).padStart(2,'0'); return result; } }
+      const usMatch = s.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+      if (usMatch) { const m = MONTH_MAP[usMatch[1].toLowerCase()]; if (m) { result.day = parseInt(usMatch[2], 10); result.month = m; result.year = parseInt(usMatch[3], 10); result.iso = result.year+'-'+String(result.month).padStart(2,'0')+'-'+String(result.day).padStart(2,'0'); return result; } }
+      const monthYearMatch = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+      if (monthYearMatch) { const m = MONTH_MAP[monthYearMatch[1].toLowerCase()]; if (m) { result.month = m; result.year = parseInt(monthYearMatch[2], 10); return result; } }
+      const yearMatch = s.match(/^(\d{4})$/);
+      if (yearMatch) { result.year = parseInt(yearMatch[1], 10); return result; }
+      const anyYear = s.match(/\b(\d{4})\b/);
+      if (anyYear) { result.year = parseInt(anyYear[1], 10); }
+      return result;
+    }
+
+    // =========================================================================
+    // Load INCIDENTS from index.html by parsing the script
+    // =========================================================================
+    // We need to fetch and eval the INCIDENTS array from index.html
+    let ALL_INCIDENTS = [];
+
+    async function loadData() {
+      try {
+        const resp = await fetch('index.html');
+        const html = await resp.text();
+        // Extract the INCIDENTS array
+        const match = html.match(/const INCIDENTS = \[([\s\S]*?)\n\s*\];/);
+        if (match) {
+          const code = 'return [' + match[1] + '];';
+          const fn = new Function(code);
+          const incidents = fn();
+          ALL_INCIDENTS = incidents.concat(typeof EMODNET_INCIDENTS !== 'undefined' ? EMODNET_INCIDENTS : []);
+        }
+      } catch (e) {
+        console.error('Failed to load index.html:', e);
+        // Fallback: just use EMODNET data if available
+        ALL_INCIDENTS = typeof EMODNET_INCIDENTS !== 'undefined' ? EMODNET_INCIDENTS : [];
+      }
+
+      ALL_INCIDENTS.forEach(i => {
+        i.dateInfo = parseDate(i.date);
+      });
+
+      runValidation();
+    }
+
+    const VALID_CATEGORIES = ['military', 'passenger_ferry', 'ferry', 'submarine', 'submersible', 'cargo', 'cargo_merchant', 'environmental', 'enviro', 'other_maritime_incident', 'unknown'];
+
+    function runValidation() {
+      document.getElementById('loading').style.display = 'none';
+      const resultsEl = document.getElementById('results');
+      const overviewEl = document.getElementById('overview');
+
+      // ===================== 1. Invalid / Unparseable Dates =====================
+      const invalidDates = ALL_INCIDENTS.filter(i => i.dateInfo.year === null && i.date && i.date !== '' && i.date !== '-' && i.date !== 'Unknown');
+      const missingDates = ALL_INCIDENTS.filter(i => !i.date || i.date === '' || i.date === '-' || i.date === 'Unknown');
+      const partialDates = ALL_INCIDENTS.filter(i => i.dateInfo.year !== null && i.dateInfo.iso === null);
+
+      // ===================== 2. Invalid Coordinates =====================
+      const invalidCoords = ALL_INCIDENTS.filter(i => {
+        if (typeof i.lat !== 'number' || typeof i.lon !== 'number') return true;
+        if (isNaN(i.lat) || isNaN(i.lon)) return true;
+        if (i.lat < -90 || i.lat > 90 || i.lon < -180 || i.lon > 180) return true;
+        return false;
+      });
+
+      // ===================== 3. Missing Sources =====================
+      const missingSources = ALL_INCIDENTS.filter(i => !i.src || i.src.length === 0);
+
+      // ===================== 4. Unknown Categories =====================
+      const unknownCats = ALL_INCIDENTS.filter(i => !VALID_CATEGORIES.includes(i.cls));
+
+      // ===================== 5. Missing Required Fields =====================
+      const malformed = ALL_INCIDENTS.filter(i => {
+        if (!i.name || i.name === '') return true;
+        if (typeof i.lat !== 'number' || typeof i.lon !== 'number') return true;
+        if (!i.desc || i.desc.length < 5) return true;
+        return false;
+      });
+
+      // ===================== 6. Duplicate Candidates =====================
+      function normalizeName(n) {
+        return (n || '').toLowerCase()
+          .replace(/^(ss |rms |mv |hms |uss |hmt |ht |ms |mt |hs |hmhs |tsms |km |ins |htms )/i, '')
+          .replace(/\(.*\)/, '')
+          .replace(/[^a-z0-9]/g, '')
+          .trim();
+      }
+
+      const dupeMap = new Map();
+      ALL_INCIDENTS.forEach((inc, idx) => {
+        const key = normalizeName(inc.name);
+        if (key.length < 3 || key === 'unknown' || key === 'na' || key === 'n/a') return;
+        if (!dupeMap.has(key)) dupeMap.set(key, []);
+        dupeMap.get(key).push({ idx, inc });
+      });
+
+      const duplicateCandidates = [];
+      dupeMap.forEach((entries, key) => {
+        if (entries.length > 1) {
+          // Check if same year or nearby coordinates
+          for (let i = 0; i < entries.length; i++) {
+            for (let j = i + 1; j < entries.length; j++) {
+              const a = entries[i].inc, b = entries[j].inc;
+              const sameYear = a.dateInfo.year !== null && a.dateInfo.year === b.dateInfo.year;
+              const nearbyCoords = Math.abs(a.lat - b.lat) < 1 && Math.abs(a.lon - b.lon) < 1;
+              if (sameYear || nearbyCoords) {
+                duplicateCandidates.push({ a, b, key, sameYear, nearbyCoords });
+              }
+            }
+          }
+        }
+      });
+
+      // ===================== Overview =====================
+      overviewEl.innerHTML = `
+        <div class="section">
+          <div class="stat"><span class="n">${ALL_INCIDENTS.length}</span> Total Records</div>
+          <div class="stat"><span class="n ${invalidDates.length ? 'err' : 'ok'}">${invalidDates.length}</span> Unparseable Dates</div>
+          <div class="stat"><span class="n ${missingDates.length ? 'warn' : 'ok'}">${missingDates.length}</span> Missing Dates</div>
+          <div class="stat"><span class="n">${partialDates.length}</span> Partial Dates (year-only/month-year)</div>
+          <div class="stat"><span class="n ${invalidCoords.length ? 'err' : 'ok'}">${invalidCoords.length}</span> Invalid Coords</div>
+          <div class="stat"><span class="n ${unknownCats.length ? 'warn' : 'ok'}">${unknownCats.length}</span> Unknown Categories</div>
+          <div class="stat"><span class="n ${duplicateCandidates.length ? 'warn' : 'ok'}">${duplicateCandidates.length}</span> Duplicate Candidates</div>
+          <div class="stat"><span class="n ${malformed.length ? 'err' : 'ok'}">${malformed.length}</span> Malformed Records</div>
+        </div>
+      `;
+
+      // ===================== Render Tables =====================
+      function renderTable(title, items, columns) {
+        const badge = items.length > 0
+          ? `<span class="count-badge">${items.length}</span>`
+          : `<span class="count-badge ok-badge">0</span>`;
+        let html = `<h2>${title}${badge}</h2>`;
+        if (items.length === 0) { html += '<p class="ok">✅ No issues found.</p>'; return html; }
+        html += '<table><thead><tr>';
+        columns.forEach(c => html += `<th>${c.label}</th>`);
+        html += '</tr></thead><tbody>';
+        items.slice(0, 200).forEach(item => {
+          html += '<tr>';
+          columns.forEach(c => html += `<td>${c.fn(item)}</td>`);
+          html += '</tr>';
+        });
+        if (items.length > 200) html += `<tr><td colspan="${columns.length}" style="color:#7c93a6;text-align:center">...and ${items.length - 200} more</td></tr>`;
+        html += '</tbody></table>';
+        return html;
+      }
+
+      let html = '';
+
+      html += renderTable('Unparseable Dates', invalidDates, [
+        { label: 'Name', fn: i => i.name },
+        { label: 'Raw Date', fn: i => i.date },
+        { label: 'cls', fn: i => i.cls },
+        { label: 'Extracted Year', fn: i => i.dateInfo.year !== null ? i.dateInfo.year : '—' }
+      ]);
+
+      html += renderTable('Missing / Unknown Dates', missingDates.slice(0, 50), [
+        { label: 'Name', fn: i => i.name },
+        { label: 'Raw Date', fn: i => JSON.stringify(i.date) },
+        { label: 'cls', fn: i => i.cls }
+      ]);
+
+      html += renderTable('Invalid Coordinates', invalidCoords, [
+        { label: 'Name', fn: i => i.name },
+        { label: 'Lat', fn: i => i.lat },
+        { label: 'Lon', fn: i => i.lon }
+      ]);
+
+      html += renderTable('Unknown Categories (not in valid set)', unknownCats, [
+        { label: 'Name', fn: i => i.name },
+        { label: 'cls', fn: i => i.cls },
+        { label: 'Date', fn: i => i.date }
+      ]);
+
+      html += renderTable('Duplicate Candidates (same normalized name + year or nearby coords)', duplicateCandidates, [
+        { label: 'Normalized Key', fn: d => d.key },
+        { label: 'Record A', fn: d => `${d.a.name} (${d.a.date})` },
+        { label: 'Record B', fn: d => `${d.b.name} (${d.b.date})` },
+        { label: 'Same Year?', fn: d => d.sameYear ? '✅' : '—' },
+        { label: 'Nearby Coords?', fn: d => d.nearbyCoords ? '✅' : '—' },
+        { label: 'Lat/Lon A', fn: d => `${d.a.lat}, ${d.a.lon}` },
+        { label: 'Lat/Lon B', fn: d => `${d.b.lat}, ${d.b.lon}` }
+      ]);
+
+      html += renderTable('Malformed Records (missing name, coords, or desc)', malformed, [
+        { label: 'Name', fn: i => i.name || '(empty)' },
+        { label: 'Date', fn: i => i.date },
+        { label: 'Has Lat/Lon', fn: i => (typeof i.lat === 'number' && typeof i.lon === 'number') ? '✅' : '❌' },
+        { label: 'Desc Length', fn: i => (i.desc || '').length }
+      ]);
+
+      resultsEl.innerHTML = html;
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

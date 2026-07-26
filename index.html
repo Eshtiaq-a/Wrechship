@@ -3,10 +3,10 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>WRECKSHIP — Global Shipwrecks Database & 3D Interactive Map till 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WRECKSHIP — Shipwrecks & Major Maritime Incidents | 3D Interactive Map</title>
   <meta name="description"
-    content="Interactive 3D globe mapping over 2578 major maritime disasters till 2026. Explore military, commercial, submarine, and environmental shipping incidents worldwide.">
+    content="Interactive 3D globe mapping major shipwrecks and maritime incidents. Explore military, passenger, submarine, submersible, cargo, and environmental shipping disasters worldwide.">
   <link rel="icon" type="image/png" href="favicon.png">
   <!-- Security Headers -->
   <meta http-equiv="Content-Security-Policy"
@@ -15,6 +15,7 @@
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
@@ -37,6 +38,8 @@
       --submarine: #a78bfa;
       --cargo: #e3b23c;
       --enviro: #c98b4a;
+      --submersible: #7c5cbf;
+      --other: #6b9080;
       --font-display: 'Oswald', "Arial Narrow", sans-serif;
       --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
       --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
@@ -502,9 +505,7 @@
     #incidentList {
       flex: 1;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      position: relative;
       padding-right: 2px;
     }
 
@@ -1022,7 +1023,7 @@
     <header>
       <div class="brand">
         <h1><span class="dot"></span>WRECKSHIP</h1>
-        <div class="tagline">Global Shipwrecks Database & 3D Map</div>
+        <div class="tagline">Shipwrecks & Major Maritime Incidents — 3D Map</div>
       </div>
       <div id="headerNavContainer" style="pointer-events: auto;"></div>
       <button id="menuBtn" aria-label="Open incident list">☰</button>
@@ -1042,15 +1043,17 @@
     <aside id="sidebar">
       <div class="sb-inner">
         <div id="sidebarNavContainer" style="margin-bottom: 15px;">
-          <div class="center-nav" id="centerNav" style="display: flex; flex-direction: column; gap: 15px; pointer-events: auto;">
+          <div class="center-nav" id="centerNav"
+            style="display: flex; flex-direction: column; gap: 15px; pointer-events: auto;">
             <div class="searchRow" style="margin-bottom: 0;">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
-              <input id="searchInput" type="text" placeholder="Search vessel or incident…" autocomplete="off">
+              <input id="searchInput" type="text" placeholder="Search vessel or incident…" aria-label="Search vessel or incident" autocomplete="off">
             </div>
-            <div id="onThisDay" style="padding: 12px 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.9em; line-height: 1.4; color: var(--text-dim);">
+            <div id="onThisDay"
+              style="padding: 12px 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.9em; line-height: 1.4; color: var(--text-dim);">
               <!-- Populated by JS -->
               On this day: Loading...
             </div>
@@ -1063,8 +1066,8 @@
           <div class="sliders">
             <div class="track"></div>
             <div class="trackFill" id="trackFill"></div>
-            <input type="range" id="yearFrom" min="0" max="2026" value="0" step="1">
-            <input type="range" id="yearTo" min="0" max="2026" value="2026" step="1">
+            <input type="range" id="yearFrom" min="0" max="2026" value="0" step="1" aria-label="Start year slider">
+            <input type="range" id="yearTo" min="0" max="2026" value="2026" step="1" aria-label="End year slider">
           </div>
         </div>
 
@@ -1073,7 +1076,8 @@
             <h3 style="display:inline-block; margin-right:8px; margin-bottom:0;">Incident log</h3>
             <span id="listCount">0 entries</span>
           </div>
-          <select id="sortSelect" style="background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--panel-border); padding: 4px; border-radius: 4px; font-size: 0.8em; outline: none; cursor: pointer; font-family: var(--font-body);">
+          <select id="sortSelect" aria-label="Sort by options"
+            style="background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--panel-border); padding: 4px; border-radius: 4px; font-size: 0.8em; outline: none; cursor: pointer; font-family: var(--font-body);">
             <option value="dateDesc">Newest First</option>
             <option value="dateAsc">Oldest First</option>
             <option value="nameAsc">Name (A-Z)</option>
@@ -1126,7 +1130,7 @@
 
     <div id="timelineBottom">
       <div id="tlValue">All Years</div>
-      <input type="range" id="tlScrubber" min="0" max="2026" value="0">
+      <input type="range" id="tlScrubber" min="0" max="2026" value="0" aria-label="Timeline slider">
       <button id="tlReset">Show All</button>
     </div>
 
@@ -1169,9 +1173,8 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="emodnet_data.js"></script>
-  <script>(function () { var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'; document.head.appendChild(s); })();</script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script defer src="emodnet_data.js"></script>
   <script>
     (function () {
       "use strict";
@@ -4780,21 +4783,209 @@
         { name: "QT 905599 TS", date: "2025", lat: 17.1670, lon: 107.4000, cls: "cargo", deaths: "Unknown", sea: "international waters", precision: "exact", desc: "The fishing vessel capsized and sank in the South China Sea 3 nautical miles (5.6 km) north east of Cồn Cỏ Island (17°10′N 107°24′E / 17.167°N 107.400°E / 17.167; 107.400) in large waves. The fishing vessel QT-91090-TS ( Vietnam) rescued all six crew members.", src: [] },
       ];
 
-      const ALL_INCIDENTS = INCIDENTS.concat(typeof EMODNET_INCIDENTS !== 'undefined' ? EMODNET_INCIDENTS : []);
-      ALL_INCIDENTS.forEach(i => {
-        if (!i.src || i.src.length === 0 || i.src[0] === "EMODnet") {
-          i.src = [`https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(i.name)}+shipwreck`];
-        }
-      });
+      /* ============================= DATE NORMALIZATION ENGINE ============================= */
+      const MONTH_MAP = {
+        'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
+        'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12
+      };
+      const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
 
-      const INCIDENTS_CLEAN = ALL_INCIDENTS.filter(i => i.desc && i.desc.length > 10);
+      /**
+       * Parse a raw date string into structured dateInfo. Never uses new Date(string).
+       * Returns { year: number|null, month: number|null, day: number|null, iso: string|null, raw: string }
+       */
+      function parseDate(raw) {
+        const result = { year: null, month: null, day: null, iso: null, raw: raw || '' };
+        if (!raw || raw === '' || raw === '-' || raw === 'Unknown') return result;
+
+        const s = raw.trim();
+
+        // ISO format: "YYYY-MM-DD"
+        const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (isoMatch) {
+          result.year = parseInt(isoMatch[1], 10);
+          result.month = parseInt(isoMatch[2], 10);
+          result.day = parseInt(isoMatch[3], 10);
+          result.iso = s;
+          return result;
+        }
+
+        // "D Month YYYY" or "DD Month YYYY" (most common non-ISO format)
+        const dmyMatch = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+        if (dmyMatch) {
+          const m = MONTH_MAP[dmyMatch[2].toLowerCase()];
+          if (m) {
+            result.day = parseInt(dmyMatch[1], 10);
+            result.month = m;
+            result.year = parseInt(dmyMatch[3], 10);
+            result.iso = result.year + '-' + String(result.month).padStart(2, '0') + '-' + String(result.day).padStart(2, '0');
+            return result;
+          }
+        }
+
+        // "D or D Month YYYY" (e.g. "1 or 3 September 1943")
+        const orMatch = s.match(/^(\d{1,2})\s+or\s+\d{1,2}\s+([A-Za-z]+)\s+(\d{4})$/);
+        if (orMatch) {
+          const m = MONTH_MAP[orMatch[2].toLowerCase()];
+          if (m) {
+            result.day = parseInt(orMatch[1], 10);
+            result.month = m;
+            result.year = parseInt(orMatch[3], 10);
+            result.iso = result.year + '-' + String(result.month).padStart(2, '0') + '-' + String(result.day).padStart(2, '0');
+            return result;
+          }
+        }
+
+        // US format: "Month D, YYYY" (e.g. "June 11, 1942")
+        const usMatch = s.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+        if (usMatch) {
+          const m = MONTH_MAP[usMatch[1].toLowerCase()];
+          if (m) {
+            result.day = parseInt(usMatch[2], 10);
+            result.month = m;
+            result.year = parseInt(usMatch[3], 10);
+            result.iso = result.year + '-' + String(result.month).padStart(2, '0') + '-' + String(result.day).padStart(2, '0');
+            return result;
+          }
+        }
+
+        // "Month YYYY" (e.g. "April 1853")
+        const monthYearMatch = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+        if (monthYearMatch) {
+          const m = MONTH_MAP[monthYearMatch[1].toLowerCase()];
+          if (m) {
+            result.month = m;
+            result.year = parseInt(monthYearMatch[2], 10);
+            return result;
+          }
+        }
+
+        // Year-only: "YYYY" (e.g. "1902", "2025")
+        const yearMatch = s.match(/^(\d{4})$/);
+        if (yearMatch) {
+          result.year = parseInt(yearMatch[1], 10);
+          return result;
+        }
+
+        // Fallback: try to extract a 4-digit year from anywhere in the string
+        const anyYear = s.match(/\b(\d{4})\b/);
+        if (anyYear) {
+          result.year = parseInt(anyYear[1], 10);
+        }
+
+        return result;
+      }
+
+      /**
+       * Format a dateInfo object for display. Never returns "Invalid Date" or "NaN".
+       */
+      function fmtDate(inc) {
+        const d = inc.dateInfo;
+        if (!d || d.year === null) return 'Date unknown';
+        if (d.iso && d.month !== null && d.day !== null) {
+          return MONTH_NAMES[d.month] + ' ' + d.day + ', ' + d.year;
+        }
+        if (d.month !== null) {
+          return MONTH_NAMES[d.month] + ' ' + d.year + ' (exact day unknown)';
+        }
+        return d.year + ' (exact date unknown)';
+      }
+
+      /**
+       * Get 4-digit year from incident, or null if unknown.
+       */
+      function incidentYear(i) {
+        return i.dateInfo ? i.dateInfo.year : null;
+      }
+
+      /* ============================= CATEGORY NORMALIZATION ============================= */
+      // Map old category keys to new ones
+      const CLS_MIGRATION = { 'ferry': 'passenger_ferry', 'cargo': 'cargo_merchant', 'enviro': 'environmental' };
+
+      // Keywords in name/desc that indicate military vessels miscategorized as cargo
+      const MILITARY_KEYWORDS = [
+        'aircraft carrier', 'battleship', 'cruiser', 'destroyer', 'frigate', 'corvette',
+        'torpedo boat', 'minesweeper', 'mine sweeper', 'gunboat', 'patrol boat',
+        'troopship', 'troop ship', 'armed transport', 'war ', 'u-boat', 'U-boat',
+        'battle of', 'torpedoed by', 'sunk by'
+      ];
+
+      const PASSENGER_KEYWORDS = [
+        'passenger', 'cruise ship', 'river cruise', 'ocean liner', 'passenger liner',
+        'pleasure boat', 'ferry', 'hospital ship'
+      ];
+
+      const ENVIRONMENTAL_KEYWORDS = [
+        'oil spill', 'oil tanker', 'crude oil', 'environmental disaster', 'pollution',
+        'chemical tanker', 'toxic'
+      ];
+
+      function inferCategory(inc) {
+        const name = (inc.name || '').toLowerCase();
+        const desc = (inc.desc || '').toLowerCase();
+        const combined = name + ' ' + desc;
+
+        // Titan special case — must be submersible, not submarine
+        if (name.includes('titan') && combined.includes('submersible')) return 'submersible';
+        if (name.includes('titan') && combined.includes('oceangate')) return 'submersible';
+
+        // Keep submarine if already tagged submarine and not Titan
+        if (inc.cls === 'submarine') return 'submarine';
+
+        // Check military keywords
+        if (MILITARY_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return 'military';
+
+        // Check environmental
+        if (ENVIRONMENTAL_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return 'environmental';
+
+        // Check passenger/ferry
+        if (PASSENGER_KEYWORDS.some(kw => combined.includes(kw.toLowerCase()))) return 'passenger_ferry';
+
+        // Apply migration map for old keys
+        if (CLS_MIGRATION[inc.cls]) return CLS_MIGRATION[inc.cls];
+
+        // Already a valid new key?
+        if (['military', 'passenger_ferry', 'submarine', 'submersible', 'cargo_merchant',
+             'environmental', 'other_maritime_incident', 'unknown'].includes(inc.cls)) {
+          return inc.cls;
+        }
+
+        return 'cargo_merchant';
+      }
+
+      /* ============================= INCIDENT TYPE INFERENCE ============================= */
+      function inferIncidentType(inc) {
+        const desc = (inc.desc || '').toLowerCase();
+        const name = (inc.name || '').toLowerCase();
+        const combined = name + ' ' + desc;
+
+        if (combined.includes('implo')) return 'implosion';
+        if (combined.includes('grounded') || combined.includes('grounding') || combined.includes('ran aground')) return 'grounding';
+        if (combined.includes('capsiz')) return 'capsizing';
+        if (combined.includes('fire') && !combined.includes('fired')) return 'fire';
+        if (combined.includes('collision') || combined.includes('collided') || combined.includes('rammed')) return 'collision';
+        if (combined.includes('scuttl')) return 'scuttling';
+        if (combined.includes('torpedo')) return 'torpedoed';
+        if (combined.includes('mine') && (combined.includes('struck a mine') || combined.includes('hit a mine') || combined.includes('mined'))) return 'mined';
+        if (combined.includes('storm') || combined.includes('typhoon') || combined.includes('hurricane') || combined.includes('foundered')) return 'foundering';
+        if (combined.includes('bomb') || combined.includes('air attack') || combined.includes('dive bomber')) return 'air_attack';
+        return 'shipwreck';
+      }
+
+      /* ============================= DATA PROCESSING PIPELINE ============================= */
+      let ALL_INCIDENTS = [];
+      let INCIDENTS_CLEAN = [];
 
       const CLASS_META = {
-        military: { label: "Military", color: 0xe8734a, css: "var(--military)" },
-        ferry: { label: "Passenger / Ferry", color: 0x2dd4bf, css: "var(--ferry)" },
-        submarine: { label: "Submarine", color: 0xa78bfa, css: "var(--submarine)" },
-        cargo: { label: "Cargo / Merchant", color: 0xe3b23c, css: "var(--cargo)" },
-        enviro: { label: "Environmental", color: 0xc98b4a, css: "var(--enviro)" }
+        military:                { label: "Military",           color: 0xe8734a, css: "var(--military)" },
+        passenger_ferry:         { label: "Passenger / Ferry",  color: 0x2dd4bf, css: "var(--ferry)" },
+        submarine:               { label: "Submarine",          color: 0xa78bfa, css: "var(--submarine)" },
+        submersible:             { label: "Submersible",         color: 0x7c5cbf, css: "var(--submersible)" },
+        cargo_merchant:          { label: "Cargo / Merchant",   color: 0xe3b23c, css: "var(--cargo)" },
+        environmental:           { label: "Environmental",      color: 0xc98b4a, css: "var(--enviro)" },
+        other_maritime_incident: { label: "Other Incident",     color: 0x6b9080, css: "var(--other)" },
+        unknown:                 { label: "Unknown",            color: 0x7c93a6, css: "var(--text-dim)" }
       };
       const RADIUS = 5;
       let activeFilters = new Set(Object.keys(CLASS_META));
@@ -4802,17 +4993,13 @@
       let yearFrom = 1910, yearTo = 2026;
       let selectedIncident = null;
 
-      function incidentYear(i) { return parseInt(i.date.slice(0, 4), 10); }
       function passesFilter(i) {
         if (!activeFilters.has(i.cls)) return false;
         const y = incidentYear(i);
-        if (y < yearFrom || y > yearTo) return false;
+        if (y !== null && (y < yearFrom || y > yearTo)) return false;
+        if (y === null && yearFrom > 0) return false; // hide unknown-year records unless slider includes year 0
         if (searchTerm && !i.name.toLowerCase().includes(searchTerm)) return false;
         return true;
-      }
-      function fmtDate(d) {
-        const dt = new Date(d + "T00:00:00Z");
-        return dt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
       }
       function fmtCoords(lat, lon) {
         const la = Math.abs(lat).toFixed(4) + "°" + (lat >= 0 ? "N" : "S");
@@ -4859,39 +5046,81 @@
       const listEl = document.getElementById('incidentList');
       const sortSelect = document.getElementById('sortSelect');
       if (sortSelect) sortSelect.addEventListener('change', buildList);
-      
+
+      const ROW_HEIGHT = 44; // approx height of each row in px
+      let virtualFiltered = [];
+      let lastStartIndex = -1;
+
       function buildList() {
         const sortVal = sortSelect ? sortSelect.value : 'dateDesc';
-        const filtered = INCIDENTS_CLEAN.filter(passesFilter).sort((a, b) => {
+        virtualFiltered = INCIDENTS_CLEAN.filter(passesFilter).sort((a, b) => {
           if (sortVal === 'nameAsc') return a.name.localeCompare(b.name);
           if (sortVal === 'nameDesc') return b.name.localeCompare(a.name);
-          
           let aYear = incidentYear(a);
           let bYear = incidentYear(b);
-          if (isNaN(aYear)) aYear = 0;
-          if (isNaN(bYear)) bYear = 0;
-          
-          if (sortVal === 'dateAsc') return (aYear - bYear) || a.date.localeCompare(b.date);
-          return (bYear - aYear) || b.date.localeCompare(a.date);
+          const aY = aYear !== null ? aYear : -Infinity;
+          const bY = bYear !== null ? bYear : -Infinity;
+          if (sortVal === 'dateAsc') return (aY - bY) || (a.dateInfo.iso || '').localeCompare(b.dateInfo.iso || '');
+          return (bY - aY) || (b.dateInfo.iso || '').localeCompare(a.dateInfo.iso || '');
         });
+        
         listEl.innerHTML = "";
-        document.getElementById('listCount').textContent = filtered.length + " entr" + (filtered.length === 1 ? "y" : "ies");
-        if (filtered.length === 0) {
+        document.getElementById('listCount').textContent = virtualFiltered.length + " entr" + (virtualFiltered.length === 1 ? "y" : "ies");
+        
+        if (virtualFiltered.length === 0) {
           const e = document.createElement('div');
           e.className = 'empty';
           e.textContent = "No incidents match these filters.";
           listEl.appendChild(e);
           return;
         }
-        filtered.forEach(inc => {
+
+        const spacer = document.createElement('div');
+        spacer.id = 'listSpacer';
+        spacer.style.height = (virtualFiltered.length * ROW_HEIGHT) + 'px';
+        spacer.style.width = '1px';
+        listEl.appendChild(spacer);
+        
+        lastStartIndex = -1;
+        renderVirtual();
+      }
+
+      function renderVirtual() {
+        if (virtualFiltered.length === 0) return;
+        const scrollTop = listEl.scrollTop;
+        const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
+        if (startIndex === lastStartIndex) return;
+        lastStartIndex = startIndex;
+        
+        const endIndex = Math.min(virtualFiltered.length, startIndex + 30);
+        
+        // Remove existing rows (keep the spacer)
+        Array.from(listEl.children).forEach(c => {
+          if (c.className.includes('row')) listEl.removeChild(c);
+        });
+        
+        const frag = document.createDocumentFragment();
+        for (let i = startIndex; i < endIndex; i++) {
+          const inc = virtualFiltered[i];
           const row = document.createElement('div');
           row.className = 'row' + (selectedIncident === inc ? ' selected' : '');
-          const m = CLASS_META[inc.cls];
-          row.innerHTML = '<span class="sw" style="background:' + m.css + '"></span><div class="rt"><div class="nm">' + inc.name + '</div><div class="yr">' + incidentYear(inc) + ' · ' + m.label + '</div></div>';
+          row.style.position = 'absolute';
+          row.style.top = (i * ROW_HEIGHT) + 'px';
+          row.style.left = '0';
+          row.style.right = '6px';
+          row.style.height = (ROW_HEIGHT - 2) + 'px'; // account for gap
+          row.tabIndex = 0; // Accessibility
+          
+          const m = CLASS_META[inc.cls] || CLASS_META.unknown;
+          const yearDisplay = incidentYear(inc) !== null ? incidentYear(inc) : 'Unknown';
+          row.innerHTML = '<span class="sw" style="background:' + m.css + '"></span><div class="rt"><div class="nm">' + inc.name + '</div><div class="yr">' + yearDisplay + ' · ' + m.label + '</div></div>';
           row.onclick = () => selectIncident(inc, true);
-          listEl.appendChild(row);
-        });
+          row.onkeydown = (e) => { if (e.key === 'Enter') selectIncident(inc, true); };
+          frag.appendChild(row);
+        }
+        listEl.appendChild(frag);
       }
+      listEl.addEventListener('scroll', renderVirtual);
 
       function updateStats() {
         document.getElementById('statTotal').textContent = INCIDENTS_CLEAN.length;
@@ -4984,12 +5213,13 @@
       const detailEl = document.getElementById('detail');
       const overlayEl = document.getElementById('overlay');
       function openDetail(inc) {
-        const m = CLASS_META[inc.cls];
+        const m = CLASS_META[inc.cls] || CLASS_META.unknown;
         document.getElementById('dBadge').style.color = m.css;
         document.getElementById('dBadgeText').textContent = m.label;
         document.getElementById('dName').textContent = inc.name;
-        document.getElementById('dSub').textContent = incidentYear(inc) + " · " + inc.sea;
-        document.getElementById('dDate').textContent = fmtDate(inc.date);
+        const yearDisplay = incidentYear(inc) !== null ? incidentYear(inc) : 'Unknown';
+        document.getElementById('dSub').textContent = yearDisplay + " · " + inc.sea;
+        document.getElementById('dDate').textContent = fmtDate(inc);
         document.getElementById('dDeaths').textContent = fmtDeaths(inc.deaths);
         document.getElementById('dCoords').textContent = fmtCoords(inc.lat, inc.lon);
         document.getElementById('dSea').textContent = inc.sea;
@@ -5130,11 +5360,17 @@
 
       // High-quality SVG icons for each category
       const ICON_SVG = {
-        military: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M12 2L2 12h3v8h14v-8h3L12 2zM12 4.83L19.17 12h-2.26L12 7.08 7.09 12H4.83L12 4.83z" /></svg>', // Modern ship structure
-        ferry: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 11v-1.5c0-.83-.67-1.5-1.5-1.5.05-.22.1-.47.1-.73 0-1.42-1.36-2.61-3.07-2.74l-2.03-3.05c-.15-.22-.4-.36-.68-.4-.27-.04-.55.04-.76.22L9 4.3V3H6v1.94L3.84 6.78c-.26.22-.38.56-.3.89l.86 3.44C4.16 11.23 4 11.36 4 11.53c0 .17.06.33.17.44l.8 1.07.03.04L3.95 19z"/></svg>', // Cruise ship
+        military: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40" fill="{COLOR}"><path d="M 5,29 L 5,32 L 6,34 L 86,34 L 97,26 L 72,27.5 L 72,29 Z" /><path d="M 72,27.5 L 71,27.5 L 67,20 L 62,20 L 62,22 L 50,22 L 50,29 Z" /><path d="M 50,29 L 50,24 L 30,24 L 30,29 Z" /><path d="M 48,22 L 46,15 L 41,16 L 43,22 Z" /><path d="M 80,27.2 L 80,24.5 L 83,24.5 L 85,27.2 Z" /><path d="M 83,25 L 90,25 L 90,25.8 L 83,25.8 Z" /><path d="M 13,29 L 13,26 L 16,26 L 18,29 Z" /><path d="M 14,26.7 L 7,26.7 L 7,27.3 L 14,27.3 Z" /><path d="M 74,27.4 A 1.2 1.2 0 0 1 76.4 27.4 Z" /><rect x="57.5" y="5" width="1" height="15" /><circle cx="58" cy="8" r="2.2" /><path d="M 55,20 L 57.5,12 L 58.5,12 L 61,20 Z" /><rect x="53" y="13" width="10" height="0.8" /><rect x="55" y="10.5" width="6" height="0.6" /><rect x="53.8" y="11" width="0.4" height="4" /><rect x="54.8" y="11" width="0.4" height="4" /><rect x="55.8" y="11" width="0.4" height="4" /><rect x="37.6" y="10" width="0.8" height="14" /><rect x="4.8" y="27.5" width="0.4" height="1.5" /><rect x="7.8" y="27.5" width="0.4" height="1.5" /><rect x="10.8" y="27.5" width="0.4" height="1.5" /><rect x="4.8" y="27.5" width="6.4" height="0.4" /></svg>', // Detailed modern frigate/destroyer silhouette matching user reference
+        passenger_ferry: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 11v-1.5c0-.83-.67-1.5-1.5-1.5.05-.22.1-.47.1-.73 0-1.42-1.36-2.61-3.07-2.74l-2.03-3.05c-.15-.22-.4-.36-.68-.4-.27-.04-.55.04-.76.22L9 4.3V3H6v1.94L3.84 6.78c-.26.22-.38.56-.3.89l.86 3.44C4.16 11.23 4 11.36 4 11.53c0 .17.06.33.17.44l.8 1.07.03.04L3.95 19z"/></svg>', // Cruise ship
+        ferry: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 11v-1.5c0-.83-.67-1.5-1.5-1.5.05-.22.1-.47.1-.73 0-1.42-1.36-2.61-3.07-2.74l-2.03-3.05c-.15-.22-.4-.36-.68-.4-.27-.04-.55.04-.76.22L9 4.3V3H6v1.94L3.84 6.78c-.26.22-.38.56-.3.89l.86 3.44C4.16 11.23 4 11.36 4 11.53c0 .17.06.33.17.44l.8 1.07.03.04L3.95 19z"/></svg>', // Legacy key alias
         submarine: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 13a4 4 0 00-4-4h-3V6h2V4h-6v5H5a4 4 0 000 8h15v-4zM7.5 15A1.5 1.5 0 119 13.5 1.5 1.5 0 017.5 15z"/></svg>', // Submarine
-        cargo: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 8h-3V4H7v4H4c-1.1 0-2 .9-2 2v10h20V10c0-1.1-.9-2-2-2zM9 6h6v2H9V6zm11 12H4v-8h16v8zM16 11H8v2h8v-2z"/></svg>', // Cargo
-        enviro: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>' // Hazard/Oil
+        submersible: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M20 13a4 4 0 00-4-4h-3V6h2V4h-6v5H5a4 4 0 000 8h15v-4zM7.5 15A1.5 1.5 0 119 13.5 1.5 1.5 0 017.5 15z"/></svg>', // Submersible (same icon as submarine)
+        cargo_merchant: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="{COLOR}"><path fill-rule="evenodd" d="M 15,65 Q 32.5,62 49,63 L 49,94 L 25,90 Z M 39.5,70 C 39.5,68.5 38.5,67 37,67 C 35.5,67 34.5,68.5 34.5,70 C 34.5,71.5 35.5,73 37,73 C 38.5,73 39.5,71.5 39.5,70 Z" /><path fill-rule="evenodd" d="M 85,65 Q 67.5,62 51,63 L 51,94 L 75,90 Z M 65.5,70 C 65.5,68.5 64.5,67 63,67 C 61.5,67 60.5,68.5 60.5,70 C 60.5,71.5 61.5,73 63,73 C 64.5,73 65.5,71.5 65.5,70 Z" /><rect x="21" y="51" width="10" height="10" /><rect x="33" y="51" width="10" height="10" /><rect x="45" y="51" width="10" height="10" /><rect x="57" y="51" width="10" height="10" /><rect x="69" y="51" width="10" height="10" /><rect x="21" y="39" width="10" height="10" /><rect x="33" y="39" width="10" height="10" /><rect x="45" y="39" width="10" height="10" /><rect x="57" y="39" width="10" height="10" /><rect x="69" y="39" width="10" height="10" /><path d="M 22,37 L 24,30 L 76,30 L 78,37 Z" /><rect x="28" y="26" width="44" height="2" /><rect x="28" y="19" width="44" height="3" /><rect x="28" y="22" width="3" height="4" /><rect x="69" y="22" width="3" height="4" /><rect x="37" y="22" width="2" height="4" /><rect x="45" y="22" width="2" height="4" /><rect x="53" y="22" width="2" height="4" /><rect x="61" y="22" width="2" height="4" /><rect x="26" y="16" width="48" height="3" /><path d="M 40,16 L 43,9 L 57,9 L 60,16 Z" /></svg>', // Front-facing container ship silhouette matching reference
+        cargo: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="{COLOR}"><path fill-rule="evenodd" d="M 15,65 Q 32.5,62 49,63 L 49,94 L 25,90 Z M 39.5,70 C 39.5,68.5 38.5,67 37,67 C 35.5,67 34.5,68.5 34.5,70 C 34.5,71.5 35.5,73 37,73 C 38.5,73 39.5,71.5 39.5,70 Z" /><path fill-rule="evenodd" d="M 85,65 Q 67.5,62 51,63 L 51,94 L 75,90 Z M 65.5,70 C 65.5,68.5 64.5,67 63,67 C 61.5,67 60.5,68.5 60.5,70 C 60.5,71.5 61.5,73 63,73 C 64.5,73 65.5,71.5 65.5,70 Z" /><rect x="21" y="51" width="10" height="10" /><rect x="33" y="51" width="10" height="10" /><rect x="45" y="51" width="10" height="10" /><rect x="57" y="51" width="10" height="10" /><rect x="69" y="51" width="10" height="10" /><rect x="21" y="39" width="10" height="10" /><rect x="33" y="39" width="10" height="10" /><rect x="45" y="39" width="10" height="10" /><rect x="57" y="39" width="10" height="10" /><rect x="69" y="39" width="10" height="10" /><path d="M 22,37 L 24,30 L 76,30 L 78,37 Z" /><rect x="28" y="26" width="44" height="2" /><rect x="28" y="19" width="44" height="3" /><rect x="28" y="22" width="3" height="4" /><rect x="69" y="22" width="3" height="4" /><rect x="37" y="22" width="2" height="4" /><rect x="45" y="22" width="2" height="4" /><rect x="53" y="22" width="2" height="4" /><rect x="61" y="22" width="2" height="4" /><rect x="26" y="16" width="48" height="3" /><path d="M 40,16 L 43,9 L 57,9 L 60,16 Z" /></svg>', // Legacy key alias matching new style
+        environmental: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>', // Hazard/Oil
+        enviro: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>', // Legacy key alias
+        other_maritime_incident: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>', // Question/incident
+        unknown: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{COLOR}"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>' // Unknown
       };
 
       // Category-specific ship icon textures
@@ -5377,12 +5613,16 @@
         );
 
         // Create incident markers — category-specific ship icons
+        const sharedMaterials = {};
         INCIDENTS_CLEAN.forEach(inc => {
           const m = CLASS_META[inc.cls];
+          const key = inc.cls + '_' + m.color;
+          if (!sharedMaterials[key]) {
+            const tex = makeShipIcon(inc.cls, m.color);
+            sharedMaterials[key] = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, depthWrite: false, sizeAttenuation: true });
+          }
           const pos = latLonToVector3(inc.lat, inc.lon, RADIUS * 1.035);
-          const tex = makeShipIcon(inc.cls, m.color);
-          const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, depthWrite: false, sizeAttenuation: true });
-          const sprite = new THREE.Sprite(mat);
+          const sprite = new THREE.Sprite(sharedMaterials[key]);
           sprite.position.copy(pos);
           sprite.scale.set(0.24, 0.24, 1);
           sprite.userData = { incident: inc, baseScale: 0.24 };
@@ -5584,58 +5824,82 @@
 
       function updateOnThisDay() {
         const today = new Date();
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const currentMonth = monthNames[today.getMonth()];
+        const currentMonth = today.getMonth() + 1; // 1-based to match dateInfo.month
         const currentDate = today.getDate();
-        
+
         const matches = INCIDENTS_CLEAN.filter(inc => {
-          if (!inc.date || inc.date === "Unknown") return false;
-          const parts = inc.date.split(' ');
-          if (parts.length >= 2) {
-             const day = parseInt(parts[0], 10);
-             const month = parts[1];
-             if (day === currentDate && month === currentMonth) return true;
-          }
-          if (inc.date.startsWith(currentDate + " " + currentMonth)) return true;
-          return false;
+          if (!inc.dateInfo || inc.dateInfo.month === null || inc.dateInfo.day === null) return false;
+          return inc.dateInfo.day === currentDate && inc.dateInfo.month === currentMonth;
         });
-        
+
         const container = document.getElementById('onThisDay');
         if (matches.length > 0) {
           let currentIndex = 0;
           function renderMatch() {
             const inc = matches[currentIndex];
             const year = incidentYear(inc);
-            container.innerHTML = `<strong>On this day in ${year} (${currentIndex+1}/${matches.length}):</strong> ${inc.name} sunk in ${inc.sea}. <a href="#" id="onThisDayLink" style="color:var(--military); text-decoration:none; margin-left:5px;">View details ➔</a>`;
+            const yearStr = year !== null ? year : 'an unknown year';
+            container.innerHTML = `<strong>On this day in ${yearStr} (${currentIndex + 1}/${matches.length}):</strong> ${inc.name} — ${inc.sea}. <a href="#" id="onThisDayLink" style="color:var(--military); text-decoration:none; margin-left:5px;">View details ➤</a>`;
             document.getElementById('onThisDayLink').onclick = (e) => {
-               e.preventDefault();
-               const sidebarToggle = document.getElementById('sidebarToggle');
-               if (sidebarToggle && sidebarToggle.classList.contains('collapsed')) {
-                   sidebarToggle.click();
-               }
-               selectIncident(inc, true);
+              e.preventDefault();
+              const sidebarToggle = document.getElementById('sidebarToggle');
+              if (sidebarToggle && sidebarToggle.classList.contains('collapsed')) {
+                sidebarToggle.click();
+              }
+              selectIncident(inc, true);
             };
             currentIndex = (currentIndex + 1) % matches.length;
           }
-          
+
           renderMatch();
           if (matches.length > 1) {
             if (window.onThisDayInterval) clearInterval(window.onThisDayInterval);
             window.onThisDayInterval = setInterval(renderMatch, 4000);
           }
         } else {
-          container.innerHTML = `<strong>On this day:</strong> No recorded shipwrecks in our database.`;
+          container.innerHTML = `<strong>On this day:</strong> No recorded maritime incidents in our database.`;
         }
       }
 
       /* ============================= BOOT ============================= */
       function boot() {
+        ALL_INCIDENTS = INCIDENTS.concat(typeof EMODNET_INCIDENTS !== 'undefined' ? EMODNET_INCIDENTS : []);
+        
+        let index = 0;
+        const CHUNK_SIZE = 500;
+        
+        function processChunk() {
+          const end = Math.min(index + CHUNK_SIZE, ALL_INCIDENTS.length);
+          for (; index < end; index++) {
+            const i = ALL_INCIDENTS[index];
+            if (!i.src || i.src.length === 0 || i.src[0] === "EMODnet") {
+              i.src = [`https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(i.name)}+shipwreck`];
+            }
+            i.dateInfo = parseDate(i.date);
+            i.cls = inferCategory(i);
+            if (!i.incidentType) {
+              i.incidentType = inferIncidentType(i);
+            }
+          }
+          
+          if (index < ALL_INCIDENTS.length) {
+            requestAnimationFrame(processChunk);
+          } else {
+            INCIDENTS_CLEAN = ALL_INCIDENTS.filter(i => i.desc && i.desc.length > 10);
+            finishBoot();
+          }
+        }
+        processChunk();
+      }
+
+      function finishBoot() {
         buildChips();
         updateYearUI();
         refreshUI();
         initGlobe();
         updateOnThisDay();
       }
+
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => { setTimeout(boot, 100); });
       } else {
