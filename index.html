@@ -1072,6 +1072,73 @@
       user-select: none;
     }
 
+    /* Instant Search Dropdown Box */
+    .searchRow {
+      position: relative !important;
+    }
+
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--panel-solid);
+      border: 1px solid var(--line-bright);
+      border-radius: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 200;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      display: none;
+      backdrop-filter: blur(12px);
+    }
+
+    .search-dropdown.open {
+      display: block;
+    }
+
+    .search-drop-item {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--line);
+      transition: background 0.15s ease;
+    }
+
+    .search-drop-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-drop-item:hover,
+    .search-drop-item.selected {
+      background: rgba(79, 168, 255, 0.18);
+    }
+
+    .search-drop-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .search-drop-meta {
+      font-size: 0.76rem;
+      color: var(--text-dim);
+    }
+
+    .search-drop-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
     @media (max-width:880px) {
       #sidebar {
         transform: translateX(-100%);
@@ -1164,13 +1231,14 @@
         <div id="sidebarNavContainer" style="margin-bottom: 15px;">
           <div class="center-nav" id="centerNav"
             style="display: flex; flex-direction: column; gap: 15px; pointer-events: auto;">
-            <div class="searchRow" style="margin-bottom: 0;">
+            <div class="searchRow" style="margin-bottom: 0; position: relative;">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
               <input id="searchInput" type="text" placeholder="Search vessel or incident…"
                 aria-label="Search vessel or incident" autocomplete="off">
+              <div id="searchDropdown" class="search-dropdown"></div>
             </div>
             <div id="onThisDay"
               style="padding: 12px 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.9em; line-height: 1.4; color: var(--text-dim);">
@@ -5238,29 +5306,117 @@
         refreshUI(false);
       });
 
-      /* ============================= UI: SEARCH ============================= */
+      /* ============================= UI: INSTANT SEARCH DROPDOWN ============================= */
       const searchInput = document.getElementById('searchInput');
+      const searchDropdown = document.getElementById('searchDropdown');
+      let searchDropIndex = -1;
+
+      function renderSearchDropdown(query) {
+        if (!searchDropdown) return;
+        const q = query.trim().toLowerCase();
+        if (!q) {
+          searchDropdown.classList.remove('open');
+          searchDropdown.innerHTML = '';
+          searchDropIndex = -1;
+          return;
+        }
+
+        const matches = INCIDENTS_CLEAN.filter(passesFilter).slice(0, 10);
+
+        if (matches.length === 0) {
+          searchDropdown.innerHTML = '<div class="search-drop-item" style="cursor:default; color:var(--text-dim);">No matching shipwrecks found</div>';
+          searchDropdown.classList.add('open');
+          searchDropIndex = -1;
+          return;
+        }
+
+        searchDropdown.innerHTML = '';
+        searchDropIndex = -1;
+
+        matches.forEach((inc, idx) => {
+          const item = document.createElement('div');
+          item.className = 'search-drop-item';
+          item.dataset.index = idx;
+          const meta = CLASS_META[inc.cls] || CLASS_META.unknown;
+          const yearStr = incidentYear(inc) !== null ? incidentYear(inc) : 'Unknown';
+
+          item.innerHTML = `
+            <div class="search-drop-name">
+              <span>${inc.name}</span>
+              <span class="search-drop-badge" style="background:${meta.css}22; color:${meta.css}; border: 1px solid ${meta.css}55;">${meta.label}</span>
+            </div>
+            <div class="search-drop-meta">${yearStr} · ${inc.sea}</div>
+          `;
+
+          item.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            selectIncident(inc, true);
+            searchDropdown.classList.remove('open');
+            searchInput.blur();
+          });
+
+          searchDropdown.appendChild(item);
+        });
+
+        searchDropdown.classList.add('open');
+      }
+
+      function highlightDropItem(items) {
+        items.forEach((it, idx) => {
+          it.classList.toggle('selected', idx === searchDropIndex);
+          if (idx === searchDropIndex) {
+            it.scrollIntoView({ block: 'nearest' });
+          }
+        });
+      }
+
       searchInput.addEventListener('input', (e) => {
         searchTerm = e.target.value.trim().toLowerCase();
-
-        if (searchTerm.length >= 2) {
-          const filtered = INCIDENTS_CLEAN.filter(passesFilter);
-          if (filtered.length === 1 && selectedIncident !== filtered[0]) {
-            selectIncident(filtered[0], true);
-            return;
-          }
-        }
         refreshUI(false);
+        renderSearchDropdown(e.target.value);
+      });
+
+      searchInput.addEventListener('focus', (e) => {
+        if (e.target.value.trim()) {
+          renderSearchDropdown(e.target.value);
+        }
       });
 
       searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          searchTerm = e.target.value.trim().toLowerCase();
-          const filtered = INCIDENTS_CLEAN.filter(passesFilter);
-          if (filtered.length > 0 && selectedIncident !== filtered[0]) {
-            selectIncident(filtered[0], true);
-            e.target.blur();
+        if (!searchDropdown) return;
+        const items = searchDropdown.querySelectorAll('.search-drop-item:not([style*="cursor:default"])');
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (items.length > 0) {
+            searchDropIndex = (searchDropIndex + 1) % items.length;
+            highlightDropItem(items);
           }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (items.length > 0) {
+            searchDropIndex = (searchDropIndex - 1 + items.length) % items.length;
+            highlightDropItem(items);
+          }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (searchDropIndex >= 0 && items[searchDropIndex]) {
+            items[searchDropIndex].dispatchEvent(new MouseEvent('mousedown'));
+          } else {
+            const matches = INCIDENTS_CLEAN.filter(passesFilter);
+            if (matches.length > 0) {
+              selectIncident(matches[0], true);
+              searchDropdown.classList.remove('open');
+              searchInput.blur();
+            }
+          }
+        } else if (e.key === 'Escape') {
+          searchDropdown.classList.remove('open');
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (searchDropdown && !e.target.closest('.searchRow')) {
+          searchDropdown.classList.remove('open');
         }
       });
 
@@ -5835,8 +5991,8 @@
 
         openDetail(inc);
         buildList();
-        if (flyTo) {
-          // Calculate precise target rotation, offset slightly to account for the right-hand panel
+        if (flyTo && inc) {
+          // Calculate precise target rotation, offset slightly to account for the detail panel / sidebar
           let targetY = -(inc.lon + 90) * (Math.PI / 180) - 0.35;
           const targetX = inc.lat * (Math.PI / 180);
 
@@ -5846,21 +6002,26 @@
           if (dy < -Math.PI) dy += Math.PI * 2;
           targetY = globeGroup.rotation.y + dy;
 
-          animateRotation(targetX, targetY);
+          // Google Earth style fly-in: animate rotation and zoom camera in close (z = 6.8)
+          animateRotation(targetX, targetY, 6.8);
         }
       }
 
-      function animateRotation(tx, ty) {
+      function animateRotation(tx, ty, targetZoom = 6.8) {
         const startX = globeGroup.rotation.x;
         const startY = globeGroup.rotation.y;
-        const duration = 800;
+        const startZoom = camera.position.z;
+        const duration = 1100;
         const startTime = Date.now();
         function step() {
           const elapsed = Date.now() - startTime;
           const t = Math.min(elapsed / duration, 1);
-          const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
           globeGroup.rotation.x = startX + (tx - startX) * ease;
           globeGroup.rotation.y = startY + (ty - startY) * ease;
+          if (targetZoom !== null && targetZoom !== undefined) {
+            camera.position.z = startZoom + (targetZoom - startZoom) * ease;
+          }
           if (t < 1) requestAnimationFrame(step);
         }
         step();
