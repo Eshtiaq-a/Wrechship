@@ -5370,7 +5370,16 @@
         });
       }
 
+      function stopAutoRotate() {
+        autoRotate = false;
+        const btn = document.getElementById('autoRotateBtn');
+        if (btn) btn.classList.remove('on');
+      }
+
       searchInput.addEventListener('input', (e) => {
+        if (e.target.value.trim()) {
+          stopAutoRotate();
+        }
         searchTerm = e.target.value.trim().toLowerCase();
         refreshUI(false);
         renderSearchDropdown(e.target.value);
@@ -5378,6 +5387,7 @@
 
       searchInput.addEventListener('focus', (e) => {
         if (e.target.value.trim()) {
+          stopAutoRotate();
           renderSearchDropdown(e.target.value);
         }
       });
@@ -5992,6 +6002,8 @@
         openDetail(inc);
         buildList();
         if (flyTo && inc) {
+          stopAutoRotate();
+
           // Calculate exact target rotation centering directly on (lat, lon) with 100% precision
           let targetY = -(inc.lon + 90) * (Math.PI / 180);
           const targetX = inc.lat * (Math.PI / 180);
