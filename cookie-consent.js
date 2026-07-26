@@ -54,7 +54,7 @@
         <div class="consent-banner-text">
           <h3 class="consent-banner-title">Cookie & Privacy Choices</h3>
           <p class="consent-banner-desc">
-            Wreckship uses essential cookies to operate. We may also use analytics & advertising cookies (including Google AdSense) to understand site usage and deliver personalized ads. You can accept all, reject non-essential cookies, or customize your preferences anytime. View our <a href="privacy/">Privacy Policy</a> and <a href="cookies/">Cookie Policy</a>.
+            Wreckship uses essential cookies to operate. We may also use analytics & advertising cookies (including Google AdSense) to understand site usage and deliver personalized ads. You can accept all, reject non-essential cookies, or customize your preferences anytime. View our <a href="privacy/index.html">Privacy Policy</a> and <a href="cookies/index.html">Cookie Policy</a>.
           </p>
         </div>
         <div class="consent-banner-actions">
