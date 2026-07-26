@@ -8,9 +8,34 @@
   <meta name="description"
     content="Interactive 3D globe mapping major shipwrecks and maritime incidents. Explore military, passenger, submarine, submersible, cargo, and environmental shipping disasters worldwide.">
   <link rel="icon" type="image/png" href="favicon.png">
+  <!-- Google Consent Mode v2 Default Initialization -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    (function() {
+      var defaultConsent = {
+        'analytics_storage': 'denied',
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'wait_for_update': 500
+      };
+      try {
+        var stored = localStorage.getItem('wreckship_cookie_consent');
+        if (stored) {
+          var parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === 'object') {
+            defaultConsent = parsed;
+          }
+        }
+      } catch (e) {}
+      gtag('consent', 'default', defaultConsent);
+    })();
+  </script>
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5454138632654579"
     crossorigin="anonymous"></script>
+  <script defer src="/cookie-consent.js"></script>
   <!-- Security Headers -->
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://threejs.org https://pagead2.googlesyndication.com https://adservice.google.com https://www.googletagservices.com https://tpc.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://threejs.org https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; connect-src 'self' https://threejs.org https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com;">
@@ -840,7 +865,38 @@
       text-align: center;
     }
 
-    /* ---------- footer disclaimer ---------- */
+    /* ---------- footer disclaimer & links ---------- */
+    .footer-links-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 6px 12px;
+    }
+    .footer-links-bar a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-links-bar a:hover,
+    .footer-links-bar a:focus-visible {
+      color: var(--ferry);
+      text-decoration: underline;
+    }
+    #siteFooter {
+      position: fixed;
+      bottom: 12px;
+      right: 18px;
+      z-index: 15;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      pointer-events: auto;
+    }
     #footNote {
       position: fixed;
       top: 88px;
@@ -1089,6 +1145,17 @@
           </select>
         </div>
         <div id="incidentList"></div>
+        <footer class="footer-links-bar" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--line);" aria-label="Sidebar Footer Navigation">
+          <a href="/about">About</a>
+          <span>·</span>
+          <a href="/contact">Contact</a>
+          <span>·</span>
+          <a href="/privacy">Privacy</a>
+          <span>·</span>
+          <a href="/cookies">Cookies</a>
+          <span>·</span>
+          <a href="#cookie-settings" class="open-cookie-settings">Cookie Settings</a>
+        </footer>
       </div>
     </aside>
     <button id="sidebarToggle" title="Toggle sidebar">◂</button>
@@ -1137,6 +1204,20 @@
       <input type="range" id="tlScrubber" min="0" max="2026" value="0" aria-label="Timeline slider">
       <button id="tlReset">Show All</button>
     </div>
+
+    <footer id="siteFooter" aria-label="Site Navigation Overlay">
+      <div class="footer-links-bar">
+        <a href="/about">About</a>
+        <span>·</span>
+        <a href="/contact">Contact</a>
+        <span>·</span>
+        <a href="/privacy">Privacy Policy</a>
+        <span>·</span>
+        <a href="/cookies">Cookie Policy</a>
+        <span>·</span>
+        <a href="#cookie-settings" class="open-cookie-settings">Cookie Settings</a>
+      </div>
+    </footer>
 
     <div id="overlay"></div>
     <div id="detail">
