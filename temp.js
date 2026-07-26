@@ -410,7 +410,7 @@ function refreshUI(rebuildChips){
    ============================================================================ */
 let scene, camera, renderer, globeGroup, markerObjects = [];
 let dragging=false, lastX=0, lastY=0, velX=0, velY=0;
-let autoRotate = false;
+let autoRotate = true;
 let raycaster, mouse;
 const canvas = document.getElementById('globeCanvas');
 
