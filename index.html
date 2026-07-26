@@ -1206,14 +1206,102 @@
         display: none;
       }
 
-      #hint {
-        display: none;
+    #onThisDay {
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    #onThisDay:hover {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      transform: translateY(-1px);
+    }
+    
+    #tourControls {
+      position: fixed;
+      top: 100px;
+      left: 50%;
+      transform: translate(-50%, -20px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(10, 20, 30, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 50px;
+      padding: 8px 16px;
+      z-index: 1000;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 0.9em;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(26, 188, 156, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+    
+    #tourControls.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0);
+    }
+    
+    .tour-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1.1em;
+      padding: 4px 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s, background-color 0.2s;
+    }
+    
+    .tour-btn:hover {
+      color: #fff;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .tour-btn.exit-btn {
+      color: var(--ferry);
+    }
+    
+    .tour-btn.exit-btn:hover {
+      color: #ff5e5e;
+      background-color: rgba(255, 94, 94, 0.15);
+    }
+    
+    #tourText {
+      font-weight: 500;
+      border-right: 1px solid rgba(255, 255, 255, 0.15);
+      padding-right: 12px;
+      margin-right: 4px;
+    }
+
+    @media (max-width: 880px) {
+      #tourControls {
+        top: auto;
+        bottom: 95px;
+        font-size: 0.85em;
+        padding: 6px 12px;
+        gap: 8px;
       }
     }
   </style>
 </head>
 
 <body>
+  <!-- On This Day Tour HUD Controls -->
+  <div id="tourControls">
+    <span id="tourText">On This Day Tour</span>
+    <button class="tour-btn" id="tourPrevBtn" title="Previous Incident">◀</button>
+    <button class="tour-btn" id="tourPlayPauseBtn" title="Pause Tour">⏸</button>
+    <button class="tour-btn" id="tourNextBtn" title="Next Incident">▶</button>
+    <button class="tour-btn exit-btn" id="tourExitBtn" title="Exit Tour">✕</button>
+  </div>
+
   <div id="app">
     <canvas id="globeCanvas"></canvas>
 
@@ -5203,6 +5291,12 @@
       let yearFrom = 1910, yearTo = 2026;
       let selectedIncident = null;
 
+      let tourActive = false;
+      let tourMatches = [];
+      let tourCurrentIdx = 0;
+      let tourInterval = null;
+      let tourPaused = false;
+
       function passesFilter(i) {
         if (!activeFilters.has(i.cls)) return false;
         const y = incidentYear(i);
@@ -6436,6 +6530,11 @@
       }
 
       function selectIncident(inc, flyTo) {
+        // Exit Tour if selecting an incident manually outside the tour sequence
+        if (tourActive && inc && (!tourMatches[tourCurrentIdx] || tourMatches[tourCurrentIdx].name !== inc.name)) {
+          exitTour();
+        }
+
         selectedIncident = inc;
         tooltip.classList.remove('show');
 
@@ -6576,18 +6675,24 @@
         if (matches.length > 0) {
           let currentIndex = 0;
           function renderMatch() {
+            if (tourActive) return; // Don't run this rotation while the tour is active
             const inc = matches[currentIndex];
             const year = incidentYear(inc);
             const yearStr = year !== null ? year : 'an unknown year';
-            container.innerHTML = `<strong>On this day in ${yearStr} (${currentIndex + 1}/${matches.length}):</strong> ${inc.name} — ${inc.sea}. <a href="#" id="onThisDayLink" style="color:var(--military); text-decoration:none; margin-left:5px;">View details ➤</a>`;
+            
+            container.title = "Click anywhere on this box to start an interactive tour of today's incidents!";
+            container.innerHTML = `<strong>On this day in ${yearStr} (${currentIndex + 1}/${matches.length}):</strong> ${inc.name} — ${inc.sea}. <a href="#" id="onThisDayLink" style="color:var(--military); text-decoration:none; margin-left:5px; white-space: nowrap;">View details ➤</a> <span style="display:block; font-size:0.8em; color:var(--text-dim); opacity: 0.6; margin-top:4px; font-style:italic;">🎬 Click card to start map tour</span>`;
+            
             document.getElementById('onThisDayLink').onclick = (e) => {
               e.preventDefault();
+              e.stopPropagation();
               const sidebarToggle = document.getElementById('sidebarToggle');
               if (sidebarToggle && sidebarToggle.classList.contains('collapsed')) {
                 sidebarToggle.click();
               }
               selectIncident(inc, true);
             };
+            
             currentIndex = (currentIndex + 1) % matches.length;
           }
 
@@ -6596,8 +6701,124 @@
             if (window.onThisDayInterval) clearInterval(window.onThisDayInterval);
             window.onThisDayInterval = setInterval(renderMatch, 4000);
           }
+          
+          container.onclick = (e) => {
+            if (e.target.id === 'onThisDayLink') return;
+            startTour(matches);
+          };
         } else {
           container.innerHTML = `<strong>On this day:</strong> No recorded maritime incidents in our database.`;
+          container.onclick = null;
+          container.title = "";
+        }
+      }
+
+      function startTour(matches) {
+        if (!matches || matches.length === 0) return;
+        
+        if (window.onThisDayInterval) {
+          clearInterval(window.onThisDayInterval);
+        }
+        
+        tourActive = true;
+        tourMatches = matches;
+        tourCurrentIdx = 0;
+        tourPaused = false;
+        
+        document.getElementById('tourControls').classList.add('show');
+        
+        document.getElementById('tourPrevBtn').onclick = (e) => {
+          e.stopPropagation();
+          prevTourStep();
+        };
+        document.getElementById('tourNextBtn').onclick = (e) => {
+          e.stopPropagation();
+          nextTourStep();
+        };
+        document.getElementById('tourPlayPauseBtn').onclick = (e) => {
+          e.stopPropagation();
+          if (tourPaused) {
+            resumeTour();
+          } else {
+            pauseTour();
+          }
+        };
+        document.getElementById('tourExitBtn').onclick = (e) => {
+          e.stopPropagation();
+          exitTour();
+        };
+        
+        playTourStep();
+      }
+      
+      function playTourStep() {
+        if (!tourActive || tourMatches.length === 0) return;
+        const inc = tourMatches[tourCurrentIdx];
+        
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle && sidebarToggle.classList.contains('collapsed')) {
+          sidebarToggle.click();
+        }
+        
+        selectIncident(inc, true);
+        updateTourUI();
+        scheduleNextTourStep();
+      }
+      
+      function scheduleNextTourStep() {
+        if (tourInterval) clearTimeout(tourInterval);
+        if (tourPaused) return;
+        
+        tourInterval = setTimeout(() => {
+          tourCurrentIdx = (tourCurrentIdx + 1) % tourMatches.length;
+          playTourStep();
+        }, 5000);
+      }
+      
+      function pauseTour() {
+        tourPaused = true;
+        if (tourInterval) clearTimeout(tourInterval);
+        updateTourUI();
+      }
+      
+      function resumeTour() {
+        tourPaused = false;
+        scheduleNextTourStep();
+        updateTourUI();
+      }
+      
+      function nextTourStep() {
+        tourCurrentIdx = (tourCurrentIdx + 1) % tourMatches.length;
+        playTourStep();
+      }
+      
+      function prevTourStep() {
+        tourCurrentIdx = (tourCurrentIdx - 1 + tourMatches.length) % tourMatches.length;
+        playTourStep();
+      }
+      
+      function exitTour() {
+        tourActive = false;
+        tourMatches = [];
+        if (tourInterval) clearTimeout(tourInterval);
+        document.getElementById('tourControls').classList.remove('show');
+        updateOnThisDay();
+      }
+      
+      function updateTourUI() {
+        const inc = tourMatches[tourCurrentIdx];
+        const year = incidentYear(inc);
+        const yearStr = year !== null ? year : 'unknown';
+        
+        document.getElementById('tourText').textContent = `On This Day (${tourCurrentIdx + 1}/${tourMatches.length}): ${inc.name} (${yearStr})`;
+        
+        const playPauseBtn = document.getElementById('tourPlayPauseBtn');
+        if (tourPaused) {
+          playPauseBtn.textContent = '▶';
+          playPauseBtn.title = 'Resume Tour';
+        } else {
+          playPauseBtn.textContent = '⏸';
+          playPauseBtn.title = 'Pause Tour';
         }
       }
 
