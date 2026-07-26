@@ -5992,8 +5992,8 @@
         openDetail(inc);
         buildList();
         if (flyTo && inc) {
-          // Calculate precise target rotation, offset slightly to account for the detail panel / sidebar
-          let targetY = -(inc.lon + 90) * (Math.PI / 180) - 0.35;
+          // Calculate exact target rotation centering directly on (lat, lon) with 100% precision
+          let targetY = -(inc.lon + 90) * (Math.PI / 180);
           const targetX = inc.lat * (Math.PI / 180);
 
           // Choose the shortest rotation path
@@ -6002,16 +6002,16 @@
           if (dy < -Math.PI) dy += Math.PI * 2;
           targetY = globeGroup.rotation.y + dy;
 
-          // Google Earth style fly-in: animate rotation and zoom camera in close (z = 6.8)
-          animateRotation(targetX, targetY, 6.8);
+          // Animate rotation to exact pin position and zoom to balanced context distance (z = 9.0)
+          animateRotation(targetX, targetY, 9.0);
         }
       }
 
-      function animateRotation(tx, ty, targetZoom = 6.8) {
+      function animateRotation(tx, ty, targetZoom = 9.0) {
         const startX = globeGroup.rotation.x;
         const startY = globeGroup.rotation.y;
         const startZoom = camera.position.z;
-        const duration = 1100;
+        const duration = 950;
         const startTime = Date.now();
         function step() {
           const elapsed = Date.now() - startTime;
