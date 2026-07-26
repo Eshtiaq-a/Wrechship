@@ -5922,9 +5922,9 @@
         const starTexBlue = makeStarTexture('rgba(180,210,255,1)', 'rgba(120,160,255,0.25)');
         const starTexWarm = makeStarTexture('rgba(255,230,190,1)', 'rgba(255,200,140,0.2)');
 
-        // Layer 1: Super Dense dim background stars (4500 stars)
+        // Layer 1: Super Dense dim background stars (12000 stars)
         (function () {
-          const count = 4500;
+          const count = 12000;
           const pos = new Float32Array(count * 3);
           for (let i = 0; i < count; i++) {
             const r = 80 + Math.random() * 200;
@@ -5937,16 +5937,16 @@
           const geo = new THREE.BufferGeometry();
           geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
           const mat = new THREE.PointsMaterial({
-            map: starTexWhite, size: 0.4, transparent: true, opacity: 0.2,
+            map: starTexWhite, size: 0.4, transparent: true, opacity: 0.25,
             blending: THREE.AdditiveBlending, depthWrite: false
           });
           starMaterials.push(mat);
           scene.add(new THREE.Points(geo, mat));
         })();
 
-        // Layer 2: Medium white/blue shimmering stars (2000 stars)
+        // Layer 2: Medium white/blue shimmering stars (6000 stars)
         (function () {
-          const count = 2000;
+          const count = 6000;
           const pos = new Float32Array(count * 3);
           for (let i = 0; i < count; i++) {
             const r = 70 + Math.random() * 180;
@@ -5959,16 +5959,16 @@
           const geo = new THREE.BufferGeometry();
           geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
           const mat = new THREE.PointsMaterial({
-            map: starTexBlue, size: 0.7, transparent: true, opacity: 0.3,
+            map: starTexBlue, size: 0.7, transparent: true, opacity: 0.35,
             blending: THREE.AdditiveBlending, depthWrite: false
           });
           starMaterials.push(mat);
           scene.add(new THREE.Points(geo, mat));
         })();
 
-        // Layer 3: Prominent colorful stars (600 stars)
+        // Layer 3: Prominent colorful stars (2000 stars)
         (function () {
-          const count = 600;
+          const count = 2000;
           const pos = new Float32Array(count * 3);
           const colors = new Float32Array(count * 3);
           for (let i = 0; i < count; i++) {
@@ -5987,16 +5987,16 @@
           geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
           geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
           const mat = new THREE.PointsMaterial({
-            map: starTexWhite, size: 1.35, transparent: true, opacity: 0.4,
+            map: starTexWhite, size: 1.35, transparent: true, opacity: 0.45,
             vertexColors: true, blending: THREE.AdditiveBlending, depthWrite: false
           });
           starMaterials.push(mat);
           scene.add(new THREE.Points(geo, mat));
         })();
 
-        // Layer 4: Radiant beacon stars (120 stars)
+        // Layer 4: Radiant beacon stars (450 stars)
         (function () {
-          const count = 120;
+          const count = 450;
           const pos = new Float32Array(count * 3);
           for (let i = 0; i < count; i++) {
             const r = 70 + Math.random() * 140;
@@ -6009,16 +6009,16 @@
           const geo = new THREE.BufferGeometry();
           geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
           const mat = new THREE.PointsMaterial({
-            map: starTexWarm, size: 2.3, transparent: true, opacity: 0.5,
+            map: starTexWarm, size: 2.3, transparent: true, opacity: 0.55,
             blending: THREE.AdditiveBlending, depthWrite: false
           });
           starMaterials.push(mat);
           scene.add(new THREE.Points(geo, mat));
         })();
 
-        // Milky Way nebula band (3000 stars)
+        // Milky Way nebula band (8000 stars)
         (function () {
-          const count = 3000;
+          const count = 8000;
           const pos = new Float32Array(count * 3);
           for (let i = 0; i < count; i++) {
             const r = 90 + Math.random() * 130;
@@ -6033,7 +6033,7 @@
           const geo = new THREE.BufferGeometry();
           geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
           const mat = new THREE.PointsMaterial({
-            map: starTexBlue, size: 1.9, transparent: true, opacity: 0.15,
+            map: starTexBlue, size: 1.9, transparent: true, opacity: 0.2,
             color: 0x667fa8, blending: THREE.AdditiveBlending, depthWrite: false
           });
           starMaterials.push(mat);
@@ -6770,9 +6770,13 @@
         if (tourPaused) return;
         
         tourInterval = setTimeout(() => {
-          tourCurrentIdx = (tourCurrentIdx + 1) % tourMatches.length;
-          playTourStep();
-        }, 5000);
+          if (tourCurrentIdx === tourMatches.length - 1) {
+            exitTour();
+          } else {
+            tourCurrentIdx++;
+            playTourStep();
+          }
+        }, 3600);
       }
       
       function pauseTour() {
@@ -6788,13 +6792,19 @@
       }
       
       function nextTourStep() {
-        tourCurrentIdx = (tourCurrentIdx + 1) % tourMatches.length;
-        playTourStep();
+        if (tourCurrentIdx === tourMatches.length - 1) {
+          exitTour();
+        } else {
+          tourCurrentIdx++;
+          playTourStep();
+        }
       }
       
       function prevTourStep() {
-        tourCurrentIdx = (tourCurrentIdx - 1 + tourMatches.length) % tourMatches.length;
-        playTourStep();
+        if (tourCurrentIdx > 0) {
+          tourCurrentIdx--;
+          playTourStep();
+        }
       }
       
       function exitTour() {
