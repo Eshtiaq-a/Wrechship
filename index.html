@@ -1047,10 +1047,12 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: center;
       gap: 6px 8px;
       font-size: 0.8rem;
       font-family: var(--font-body);
       color: var(--text-dim);
+      text-align: center;
     }
 
     .footer-links-bar a {
@@ -1205,13 +1207,13 @@
         <div id="incidentList"></div>
         <div id="sidebarAdSlot" style="min-height:100px; margin: 12px 0;"></div>
         <footer class="footer-links-bar" aria-label="Sidebar Footer Navigation">
-          <a href="about/index.html">About</a>
+          <a href="about/index.html" onclick="window.location.href='about/index.html';">About</a>
           <span class="sep">·</span>
-          <a href="contact/index.html">Contact</a>
+          <a href="contact/index.html" onclick="window.location.href='contact/index.html';">Contact</a>
           <span class="sep">·</span>
-          <a href="privacy/index.html">Privacy Policy</a>
+          <a href="privacy/index.html" onclick="window.location.href='privacy/index.html';">Privacy Policy</a>
           <span class="sep">·</span>
-          <a href="cookies/index.html">Cookie Policy</a>
+          <a href="cookies/index.html" onclick="window.location.href='cookies/index.html';">Cookie Policy</a>
           <span class="sep">·</span>
           <a href="#cookie-settings" class="open-cookie-settings">Cookie Settings</a>
         </footer>
