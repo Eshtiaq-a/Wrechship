@@ -5547,12 +5547,12 @@
           const tex = makeShipIcon(cls, m.color);
           
           const mat = new THREE.PointsMaterial({
-            map: tex, size: 4.5, transparent: true, depthTest: true, depthWrite: false, sizeAttenuation: false
+            map: tex, size: 0.55, transparent: true, depthTest: true, depthWrite: false, sizeAttenuation: true, alphaTest: 0.1
           });
           
           const posArray = new Float32Array(list.length * 3);
           for (let i = 0; i < list.length; i++) {
-            const pos = latLonToVector3(list[i].lat, list[i].lon, RADIUS * 1.035);
+            const pos = latLonToVector3(list[i].lat, list[i].lon, RADIUS * 1.008);
             posArray[i * 3] = pos.x; posArray[i * 3 + 1] = pos.y; posArray[i * 3 + 2] = pos.z;
           }
           
@@ -5560,7 +5560,8 @@
           geo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
           
           const points = new THREE.Points(geo, mat);
-          points.userData = { isMarkers: true, list: list, baseSize: 4.5 };
+          // Store base positions to restore them when filter changes
+          points.userData = { isMarkers: true, list: list, baseSize: 0.55, originalPositions: posArray.slice() };
           globeGroup.add(points);
           markerObjects.push(points);
         });
@@ -5690,7 +5691,7 @@
         tooltip.classList.remove('show');
 
         if (inc) {
-          targetSprite.position.copy(latLonToVector3(inc.lat, inc.lon, RADIUS * 1.045));
+          targetSprite.position.copy(latLonToVector3(inc.lat, inc.lon, RADIUS * 1.012));
           targetSprite.material.color.setHex(CLASS_META[inc.cls].color);
           targetSprite.visible = true;
         }
@@ -5729,8 +5730,29 @@
       }
 
       function updateMarkerVisibility() {
-        markerObjects.forEach(spr => {
-          spr.visible = passesFilter(spr.userData.incident);
+        // Since markerObjects are now THREE.Points grouped by category,
+        // we hide filtered incidents by moving their vertices to (0,0,0) (hidden inside globe).
+        markerObjects.forEach(points => {
+          const list = points.userData.list;
+          const origPos = points.userData.originalPositions;
+          const posAttr = points.geometry.attributes.position;
+          
+          let visibleCount = 0;
+          for (let i = 0; i < list.length; i++) {
+            const inc = list[i];
+            if (passesFilter(inc)) {
+              posAttr.array[i * 3] = origPos[i * 3];
+              posAttr.array[i * 3 + 1] = origPos[i * 3 + 1];
+              posAttr.array[i * 3 + 2] = origPos[i * 3 + 2];
+              visibleCount++;
+            } else {
+              posAttr.array[i * 3] = 0;
+              posAttr.array[i * 3 + 1] = 0;
+              posAttr.array[i * 3 + 2] = 0;
+            }
+          }
+          posAttr.needsUpdate = true;
+          points.visible = visibleCount > 0;
         });
       }
 
@@ -5753,14 +5775,18 @@
           targetSprite.scale.set(ts, ts, 1);
         }
 
-        markerObjects.forEach(spr => {
-          if (spr.visible && spr.userData.incident === selectedIncident) {
-            const s = spr.userData.baseScale * (1 + 0.2 * Math.sin(pulseTime * 2));
-            spr.scale.set(s, s, 1);
-          } else {
-            spr.scale.set(spr.userData.baseScale, spr.userData.baseScale, 1);
+        // Selected incident is now highlighted via hoverSprite instead of scaling a single point
+        if (selectedIncident) {
+          if (!hoverSprite.visible || hoverSprite.userData.incident !== selectedIncident) {
+            hoverSprite.visible = true;
+            hoverSprite.userData.incident = selectedIncident;
+            hoverSprite.position.copy(latLonToVector3(selectedIncident.lat, selectedIncident.lon, RADIUS * 1.009));
           }
-        });
+          const s = 0.55 * (1 + 0.2 * Math.sin(pulseTime * 2));
+          hoverSprite.scale.set(s, s, 1);
+        } else {
+          hoverSprite.visible = false;
+        }
         renderer.render(scene, camera);
       }
 
@@ -5823,6 +5849,10 @@
         updateYearUI();
         refreshUI();
         updateOnThisDay();
+        
+        // Hide loader to show the App Shell immediately
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hide');
         
         // Dynamically load Three.js after the list is rendered
         const script = document.createElement('script');
