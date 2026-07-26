@@ -5546,6 +5546,9 @@
         selectedIncident = null;
         if (targetSprite) targetSprite.visible = false;
         buildList();
+        if (typeof animateRotation === 'function') {
+          animateRotation(preFlyRotationX, preFlyRotationY, preFlyZoom);
+        }
       }
       document.getElementById('detailClose').onclick = closeDetail;
       overlayEl.onclick = closeDetail;
@@ -5609,6 +5612,9 @@
       let scene, camera, renderer, globeGroup, markerObjects = [];
       let dragging = false, lastX = 0, lastY = 0, velX = 0, velY = 0;
       let draggingMoon = false, lastMoonX = 0, lastMoonY = 0;
+      let preFlyRotationX = 0.3;
+      let preFlyRotationY = 0;
+      let preFlyZoom = 13;
       let autoRotate = true;
       let raycaster, mouse;
       const canvas = document.getElementById('globeCanvas');
@@ -6319,7 +6325,7 @@
           if (intersects.length > 0) {
             const hit = intersects[0];
             const inc = hit.object.userData.list[hit.index];
-            selectIncident(inc, false);
+            selectIncident(inc, true);
           }
         }
         dragging = false;
@@ -6349,6 +6355,13 @@
         buildList();
         if (flyTo && inc) {
           stopAutoRotate();
+
+          // Only store the exploration position if we aren't already viewing a detail panel
+          if (typeof detailEl !== 'undefined' && detailEl && !detailEl.classList.contains('open')) {
+            preFlyRotationX = globeGroup.rotation.x;
+            preFlyRotationY = globeGroup.rotation.y;
+            preFlyZoom = camera.position.z;
+          }
 
           // Calculate exact target rotation centering directly on (lat, lon) with 100% precision
           let targetY = -(inc.lon + 90) * (Math.PI / 180);
