@@ -51,6 +51,14 @@
     rel="stylesheet">
   <link rel="stylesheet" href="/pages.css">
   <script defer src="/cookie-consent.js"></script>
+  <script defer src="/adsense-ad.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.WreckshipAd && document.getElementById('pageAdSlot')) {
+        WreckshipAd.renderInto(document.getElementById('pageAdSlot'));
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -103,6 +111,8 @@
       <p>Questions, corrections, and partnership inquiries are welcome.</p>
       <p>Email: <a href="mailto:eshtiaqahmad27@gmail.com">eshtiaqahmad27@gmail.com</a></p>
       <p>Website: <a href="https://www.wreckship.me">https://www.wreckship.me</a></p>
+
+      <div id="pageAdSlot" style="min-height:100px; margin: 24px 0;"></div>
 
       <div class="last-updated">Last updated: July 26, 2026</div>
     </article>

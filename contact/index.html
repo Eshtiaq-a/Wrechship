@@ -51,6 +51,14 @@
     rel="stylesheet">
   <link rel="stylesheet" href="/pages.css">
   <script defer src="/cookie-consent.js"></script>
+  <script defer src="/adsense-ad.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.WreckshipAd && document.getElementById('pageAdSlot')) {
+        WreckshipAd.renderInto(document.getElementById('pageAdSlot'));
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -100,6 +108,8 @@
       <h2>Response time</h2>
       <p>We aim to review messages as soon as reasonably possible. We cannot guarantee a response to every submission, but reports supported by credible sources are especially helpful.</p>
       <p>Please do not send sensitive personal information, passwords, payment information, or emergency requests through this contact channel.</p>
+
+      <div id="pageAdSlot" style="min-height:100px; margin: 24px 0;"></div>
 
       <div class="last-updated">Last updated: July 26, 2026</div>
     </article>

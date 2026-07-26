@@ -555,3 +555,31 @@ a:focus-visible {
     justify-content: flex-start;
   }
 }
+
+/* Ad Unit Styling & CLS Prevention */
+.wreckship-ad-container {
+  min-height: 100px;
+  width: 100%;
+  margin: 16px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(20, 22, 30, 0.4);
+  border: 1px solid var(--line, rgba(125, 167, 201, 0.14));
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.wreckship-ad-container::before {
+  content: 'ADVERTISEMENT';
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  color: var(--text-faint, rgba(255, 255, 255, 0.2));
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}

@@ -51,6 +51,14 @@
     rel="stylesheet">
   <link rel="stylesheet" href="/pages.css">
   <script defer src="/cookie-consent.js"></script>
+  <script defer src="/adsense-ad.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.WreckshipAd && document.getElementById('pageAdSlot')) {
+        WreckshipAd.renderInto(document.getElementById('pageAdSlot'));
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -143,6 +151,10 @@
       <p>We may update this Privacy Policy from time to time. The updated version will be posted on this page with a revised “Last updated” date.</p>
 
       <h2>Contact us</h2>
+      <p>If you have questions about this Privacy Policy, email us at <a href="mailto:eshtiaqahmad27@gmail.com">eshtiaqahmad27@gmail.com</a>.</p>
+
+      <div id="pageAdSlot" style="min-height:100px; margin: 24px 0;"></div>
+
       <address class="address-block">
         Eshtiaq Ahmad<br>
         Bangladesh<br>
