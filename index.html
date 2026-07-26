@@ -6812,6 +6812,9 @@
         tourMatches = [];
         if (tourInterval) clearTimeout(tourInterval);
         document.getElementById('tourControls').classList.remove('show');
+        if (typeof closeDetail === 'function') {
+          closeDetail();
+        }
         updateOnThisDay();
       }
       
