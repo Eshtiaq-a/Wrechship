@@ -5131,6 +5131,40 @@
       }
       function fmtDeaths(n) { return n > 0 ? n.toLocaleString() + " (est.)" : "None reported"; }
 
+      function resetToNormalState() {
+        activeFilters = new Set(Object.keys(CLASS_META));
+        searchTerm = "";
+        const sInput = document.getElementById('searchInput');
+        if (sInput) sInput.value = "";
+        const sDrop = document.getElementById('searchDropdown');
+        if (sDrop) {
+          sDrop.classList.remove('open');
+          sDrop.innerHTML = "";
+        }
+        selectedIncident = null;
+        if (typeof targetSprite !== 'undefined' && targetSprite) targetSprite.visible = false;
+        if (typeof hoverSprite !== 'undefined' && hoverSprite) hoverSprite.visible = false;
+        if (typeof closeDetail === 'function') closeDetail();
+
+        // Reset year filters if modified
+        yearFrom = 0;
+        yearTo = 2026;
+        const yfInput = document.getElementById('yearFrom');
+        const ytInput = document.getElementById('yearTo');
+        const scrubber = document.getElementById('tlScrubber');
+        const scrubberVal = document.getElementById('tlValue');
+        if (yfInput) yfInput.value = 0;
+        if (ytInput) ytInput.value = 2026;
+        if (scrubber) scrubber.value = 2026;
+        if (scrubberVal) scrubberVal.textContent = "All Years";
+        if (typeof updateYearUI === 'function') updateYearUI();
+
+        refreshUI();
+        if (typeof animateRotation === 'function' && typeof globeGroup !== 'undefined' && globeGroup) {
+          animateRotation(0.3, 0, 13);
+        }
+      }
+
       const chipWrap = document.getElementById('filterChips');
       function buildChips() {
         chipWrap.innerHTML = "";
@@ -5138,7 +5172,7 @@
         allChip.className = 'chip active';
         allChip.id = 'chipAll';
         allChip.innerHTML = '<span class="sw" style="background:#7c93a6"></span>All';
-        allChip.onclick = () => { activeFilters = new Set(Object.keys(CLASS_META)); refreshUI(); };
+        allChip.onclick = () => { resetToNormalState(); };
         chipWrap.appendChild(allChip);
         Object.keys(CLASS_META).forEach(k => {
           const m = CLASS_META[k];
