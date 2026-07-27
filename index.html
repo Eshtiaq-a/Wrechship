@@ -5732,7 +5732,7 @@
           }
         }
         // Restore auto-rotate state after the zoom-out animation completes
-        const shouldRestoreAutoRotate = resetToDefault || preFlyAutoRotate;
+        const shouldRestoreAutoRotate = (resetToDefault || preFlyAutoRotate) && !userManuallyStoppedRotation;
         if (shouldRestoreAutoRotate) {
           setTimeout(() => {
             if (!selectedIncident) {
@@ -5818,6 +5818,7 @@
       let preFlyZoom = 13;
       let preFlyAutoRotate = true;
       let autoRotate = true;
+      let userManuallyStoppedRotation = false;
       let raycaster, mouse;
       const canvas = document.getElementById('globeCanvas');
 
@@ -6412,7 +6413,11 @@
         document.getElementById('zoomInBtn').onclick = () => { camera.position.z = Math.max(camera.position.z - 1, 6.5); };
         document.getElementById('zoomOutBtn').onclick = () => { camera.position.z = Math.min(camera.position.z + 1, 25); };
         document.getElementById('resetBtn').onclick = () => { camera.position.z = 13; globeGroup.rotation.x = 0.3; globeGroup.rotation.y = 0; };
-        document.getElementById('autoRotateBtn').onclick = function () { autoRotate = !autoRotate; this.classList.toggle('on', autoRotate); };
+        document.getElementById('autoRotateBtn').onclick = function () {
+          autoRotate = !autoRotate;
+          userManuallyStoppedRotation = !autoRotate;
+          this.classList.toggle('on', autoRotate);
+        };
 
         globeGroup.rotation.x = 0.3;
         animate();
